@@ -1,0 +1,35 @@
+---
+title: "Anna Exploratory File"
+format: html
+editor: visual
+---
+
+## 
+
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+```{r}
+resolution <- "HH"
+
+sites <- c("CA-NS1", "CA-NS2", "CA-NS3", "CA-NS4", "CA-NS5", "CA-NS6", "CA-NS7")
+
+CA_NS1_data <- tibble(read.csv(str_c("Data/",sites[1],"/", resolution,".csv")))
+
+CA_NS2_data <- tibble(read.csv(str_c("Data/",sites[2],"/", resolution,".csv")))
+
+CA_NS3_data <- tibble(read.csv(str_c("Data/",sites[3],"/", resolution,".csv")))
+
+CA_NS4_data <- tibble(read.csv(str_c("Data/",sites[4],"/", resolution,".csv")))
+
+CA_NS5_data <- tibble(read.csv(str_c("Data/",sites[5],"/", resolution,".csv")))
+
+CA_NS6_data <- tibble(read.csv(str_c("Data/",sites[6],"/", resolution,".csv")))
+
+CA_NS7_data <- tibble(read.csv(str_c("Data/",sites[7],"/", resolution,".csv")))
+
+
+CA_NS1_data |> mutate("TIMESTAMP" = ymd_hm(TIMESTAMP_START))
+```
