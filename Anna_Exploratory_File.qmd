@@ -12,24 +12,121 @@ library(lubridate)
 ```
 
 ```{r}
+resolution <- "WW"
+
+sites <- c("CA-NS1", "CA-NS2", "CA-NS3", "CA-NS4", "CA-NS5", "CA-NS6", "CA-NS7")
+
+CA_NS1 <- tibble(read.csv(str_c("Data/",sites[1],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS2 <- tibble(read.csv(str_c("Data/",sites[2],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS3 <- tibble(read.csv(str_c("Data/",sites[3],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS4 <- tibble(read.csv(str_c("Data/",sites[4],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS5 <- tibble(read.csv(str_c("Data/",sites[5],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS6 <- tibble(read.csv(str_c("Data/",sites[6],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS7 <- tibble(read.csv(str_c("Data/",sites[7],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+
+WW_data <- bind_rows(list("CA-NS1" = CA_NS1,"CA-NS2" = CA_NS2,"CA-NS3" = CA_NS3,"CA-NS4" = CA_NS4,"CA-NS5" = CA_NS5,"CA-NS6" = CA_NS6,"CA-NS7" = CA_NS7), .id = "Site")
+```
+
+```{r}
 resolution <- "HH"
 
 sites <- c("CA-NS1", "CA-NS2", "CA-NS3", "CA-NS4", "CA-NS5", "CA-NS6", "CA-NS7")
 
-CA_NS1_data <- tibble(read.csv(str_c("Data/",sites[1],"/", resolution,".csv")))
+CA_NS1 <- tibble(read.csv(str_c("Data/",sites[1],"/", resolution,".csv"),
+                               na.strings = "-9999"))
 
-CA_NS2_data <- tibble(read.csv(str_c("Data/",sites[2],"/", resolution,".csv")))
+CA_NS2 <- tibble(read.csv(str_c("Data/",sites[2],"/", resolution,".csv"),
+                               na.strings = "-9999"))
 
-CA_NS3_data <- tibble(read.csv(str_c("Data/",sites[3],"/", resolution,".csv")))
+CA_NS3 <- tibble(read.csv(str_c("Data/",sites[3],"/", resolution,".csv"),
+                               na.strings = "-9999"))
 
-CA_NS4_data <- tibble(read.csv(str_c("Data/",sites[4],"/", resolution,".csv")))
+CA_NS4 <- tibble(read.csv(str_c("Data/",sites[4],"/", resolution,".csv"),
+                               na.strings = "-9999"))
 
-CA_NS5_data <- tibble(read.csv(str_c("Data/",sites[5],"/", resolution,".csv")))
+CA_NS5 <- tibble(read.csv(str_c("Data/",sites[5],"/", resolution,".csv"),
+                               na.strings = "-9999"))
 
-CA_NS6_data <- tibble(read.csv(str_c("Data/",sites[6],"/", resolution,".csv")))
+CA_NS6 <- tibble(read.csv(str_c("Data/",sites[6],"/", resolution,".csv"),
+                               na.strings = "-9999"))
 
-CA_NS7_data <- tibble(read.csv(str_c("Data/",sites[7],"/", resolution,".csv")))
+CA_NS7 <- tibble(read.csv(str_c("Data/",sites[7],"/", resolution,".csv"),
+                               na.strings = "-9999"))
 
 
-CA_NS1_data |> mutate("TIMESTAMP" = ymd_hm(TIMESTAMP_START))
+HH_data <- bind_rows(list("CA-NS1" = CA_NS1,"CA-NS2" = CA_NS2,"CA-NS3" = CA_NS3,"CA-NS4" = CA_NS4,"CA-NS5" = CA_NS5,"CA-NS6" = CA_NS6,"CA-NS7" = CA_NS7), .id = "Site")
+```
+
+```{r}
+resolution <- "MM"
+
+sites <- c("CA-NS1", "CA-NS2", "CA-NS3", "CA-NS4", "CA-NS5", "CA-NS6", "CA-NS7")
+
+CA_NS1 <- tibble(read.csv(str_c("Data/",sites[1],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS2 <- tibble(read.csv(str_c("Data/",sites[2],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS3 <- tibble(read.csv(str_c("Data/",sites[3],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS4 <- tibble(read.csv(str_c("Data/",sites[4],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS5 <- tibble(read.csv(str_c("Data/",sites[5],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS6 <- tibble(read.csv(str_c("Data/",sites[6],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS7 <- tibble(read.csv(str_c("Data/",sites[7],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+MM_data <- bind_rows(list("CA-NS1" = CA_NS1,"CA-NS2" = CA_NS2,"CA-NS3" = CA_NS3,"CA-NS4" = CA_NS4,"CA-NS5" = CA_NS5,"CA-NS6" = CA_NS6,"CA-NS7" = CA_NS7), .id = "Site")
+```
+
+```{r}
+resolution <- "DD"
+
+sites <- c("CA-NS1", "CA-NS2", "CA-NS3", "CA-NS4", "CA-NS5", "CA-NS6", "CA-NS7")
+
+CA_NS1 <- tibble(read.csv(str_c("Data/",sites[1],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS2 <- tibble(read.csv(str_c("Data/",sites[2],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS3 <- tibble(read.csv(str_c("Data/",sites[3],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS4 <- tibble(read.csv(str_c("Data/",sites[4],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS5 <- tibble(read.csv(str_c("Data/",sites[5],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS6 <- tibble(read.csv(str_c("Data/",sites[6],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS7 <- tibble(read.csv(str_c("Data/",sites[7],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+
+DD_data <- bind_rows(list("CA-NS1" = CA_NS1,"CA-NS2" = CA_NS2,"CA-NS3" = CA_NS3,"CA-NS4" = CA_NS4,"CA-NS5" = CA_NS5,"CA-NS6" = CA_NS6,"CA-NS7" = CA_NS7), .id = "Site")
+
 ```
