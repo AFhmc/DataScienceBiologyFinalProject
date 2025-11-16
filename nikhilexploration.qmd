@@ -37,12 +37,29 @@ import_data <- function() {
 You can add options to executable code like this 
 
 ```{r}
+# daily, weekly
+
+library(tidyverse)
+
 CA_NS1_DD <- read_csv('Data/CA-NS1/DD.csv')
 
 CA_NS1_DD |>
-  mutate(TIMESTAMP = ymd(str_c(str_sub(20010123, 1, 4), str_sub(20010123, 5, 6), str_sub(20010123, 7, 8), sep = '-')))
+  mutate(TIMESTAMP = ymd(str_c(str_sub(TIMESTAMP, 1, 4), str_sub(TIMESTAMP, 5, 6), str_sub(TIMESTAMP, 7, 8), sep = '-')))
 
-ymd(str_c(str_sub(20010123, 1, 4), str_sub(20010123, 5, 6), str_sub(20010123, 7, 8), sep = '-'))
+# monthly
+
+CA_NS1_MM <- read_csv('Data/CA-NS1/MM.csv')
+
+CA_NS1_MM |>
+  mutate(TIMESTAMP = ym(str_c(str_sub(TIMESTAMP, 1, 4), str_sub(TIMESTAMP, 5, 6), sep = '-')))
+
+# half hourly
+
+CA_NS1_HH <- read_csv('Data/CA-NS1/HH.csv')
+
+CA_NS1_HH |>
+  mutate(TIMESTAMP_START = ymd_hm(str_c(str_sub(TIMESTAMP_START, 1, 4), str_sub(TIMESTAMP_START, 5, 6), str_sub(TIMESTAMP_START, 7, 8), str_sub(TIMESTAMP_START, 9, 10), str_sub(TIMESTAMP_START, 11, 12), sep = ' '))) |>
+  mutate(TIMESTAMP_END = ymd_hm(str_c(str_sub(TIMESTAMP_END, 1, 4), str_sub(TIMESTAMP_END, 5, 6), str_sub(TIMESTAMP_END, 7, 8), str_sub(TIMESTAMP_END, 9, 10), str_sub(TIMESTAMP_END, 11, 12), sep = ' ')))
 ```
 
 The `echo: false` option disables the printing of code (only output is displayed).
