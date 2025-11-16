@@ -158,3 +158,13 @@ HH_data <- HH_data |> mutate(TIMESTAMP_START = ymd_hm(str_c(str_sub(TIMESTAMP_ST
                                       str_sub(TIMESTAMP_END, 9, 10), 
                                       str_sub(TIMESTAMP_END, 11, 12), sep = ' ')))
 ```
+
+Import MODIS data
+
+```{r}
+full_NDVI_data <- read.csv("Data/MODIS_NDVI_data.csv")
+#note: currently ignores quality flags
+NDVI_data <- full_NDVI_data |> select(ID, Date, MOD13A1_061__500m_16_days_NDVI) |> 
+  rename(Site = ID, NDVI = MOD13A1_061__500m_16_days_NDVI) |>
+  mutate(Date = ymd(Date))
+```
