@@ -1,0 +1,48 @@
+---
+title: "Nikhil Exploration"
+format: html
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+library(tidyverse)
+
+# don't worry about this
+
+import_data <- function() {
+  for(i in 7) {
+    for(res in c('YY', 'MM', 'WW', 'DD', 'HH')) {
+      str_c(i, '_', res) <- read_csv(str_c('Data/CA-NS', i, '/', res, '.csv'))
+    }
+  }
+}
+
+import_data <- function() {
+  for(i in 7) {
+    for(res in c('YY', 'MM', 'WW', 'DD', 'HH')) {
+      str_c(i, '_', res) <- read_csv(str_c('Data/CA-NS', i, '/', res, '.csv'))
+    }
+  }
+}
+
+```
+
+You can add options to executable code like this 
+
+```{r}
+CA_NS1_DD <- read_csv('Data/CA-NS1/DD.csv')
+
+CA_NS1_DD |>
+  mutate(TIMESTAMP = ymd(str_c(str_sub(20010123, 1, 4), str_sub(20010123, 5, 6), str_sub(20010123, 7, 8), sep = '-')))
+
+ymd(str_c(str_sub(20010123, 1, 4), str_sub(20010123, 5, 6), str_sub(20010123, 7, 8), sep = '-'))
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
