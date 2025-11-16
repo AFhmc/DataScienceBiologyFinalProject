@@ -130,3 +130,31 @@ CA_NS7 <- tibble(read.csv(str_c("Data/",sites[7],"/", resolution,".csv"),
 DD_data <- bind_rows(list("CA-NS1" = CA_NS1,"CA-NS2" = CA_NS2,"CA-NS3" = CA_NS3,"CA-NS4" = CA_NS4,"CA-NS5" = CA_NS5,"CA-NS6" = CA_NS6,"CA-NS7" = CA_NS7), .id = "Site")
 
 ```
+
+Get timestamps:
+
+```{r}
+
+DD_data <- DD_data |> mutate(TIMESTAMP = ymd(str_c(str_sub(TIMESTAMP, 1, 4), 
+                                                   str_sub(TIMESTAMP, 5, 6), 
+                                                   str_sub(TIMESTAMP, 7, 8), sep = '-')))
+
+WW_data <- WW_data |> mutate(TIMESTAMP = ymd(str_c(str_sub(TIMESTAMP_START, 1, 4), 
+                                                   str_sub(TIMESTAMP_START, 5, 6), 
+                                                   str_sub(TIMESTAMP_START, 7, 8), sep = '-')))
+
+MM_data <- MM_data |> mutate(TIMESTAMP = ym(str_c(str_sub(TIMESTAMP, 1, 4), 
+                                                  str_sub(TIMESTAMP, 5, 6), sep = '-')))
+
+HH_data <- HH_data |> mutate(TIMESTAMP_START = ymd_hm(str_c(str_sub(TIMESTAMP_START, 1, 4), 
+                                                            str_sub(TIMESTAMP_START, 5, 6), 
+                                                            str_sub(TIMESTAMP_START, 7, 8), 
+                                                            str_sub(TIMESTAMP_START, 9, 10), 
+                                                            str_sub(TIMESTAMP_START, 11, 12), 
+                                                            sep = ' '))) |>
+  mutate(TIMESTAMP_END = ymd_hm(str_c(str_sub(TIMESTAMP_END, 1, 4), 
+                                      str_sub(TIMESTAMP_END, 5, 6), 
+                                      str_sub(TIMESTAMP_END, 7, 8), 
+                                      str_sub(TIMESTAMP_END, 9, 10), 
+                                      str_sub(TIMESTAMP_END, 11, 12), sep = ' ')))
+```
