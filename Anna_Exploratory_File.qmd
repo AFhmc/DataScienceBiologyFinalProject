@@ -146,17 +146,12 @@ WW_data <- WW_data |> mutate(TIMESTAMP = ymd(str_c(str_sub(TIMESTAMP_START, 1, 4
 MM_data <- MM_data |> mutate(TIMESTAMP = ym(str_c(str_sub(TIMESTAMP, 1, 4), 
                                                   str_sub(TIMESTAMP, 5, 6), sep = '-')))
 
-HH_data <- HH_data |> mutate(TIMESTAMP_START = ymd_hm(str_c(str_sub(TIMESTAMP_START, 1, 4), 
+HH_data <- HH_data |> mutate(TIMESTAMP = ymd_hm(str_c(str_sub(TIMESTAMP_START, 1, 4), 
                                                             str_sub(TIMESTAMP_START, 5, 6), 
                                                             str_sub(TIMESTAMP_START, 7, 8), 
                                                             str_sub(TIMESTAMP_START, 9, 10), 
                                                             str_sub(TIMESTAMP_START, 11, 12), 
-                                                            sep = ' '))) |>
-  mutate(TIMESTAMP_END = ymd_hm(str_c(str_sub(TIMESTAMP_END, 1, 4), 
-                                      str_sub(TIMESTAMP_END, 5, 6), 
-                                      str_sub(TIMESTAMP_END, 7, 8), 
-                                      str_sub(TIMESTAMP_END, 9, 10), 
-                                      str_sub(TIMESTAMP_END, 11, 12), sep = ' ')))
+                                                            sep = ' ')))
 ```
 
 Import MODIS data
@@ -167,4 +162,23 @@ full_NDVI_data <- read.csv("Data/MODIS_NDVI_data.csv")
 NDVI_data <- full_NDVI_data |> select(ID, Date, MOD13A1_061__500m_16_days_NDVI) |> 
   rename(Site = ID, NDVI = MOD13A1_061__500m_16_days_NDVI) |>
   mutate(Date = ymd(Date))
+```
+
+We need to figure out appropriate quality flag filtering, because it automatically tries to interpolate: QC is percent measured/high quality gapfilled data for all but half hourly resolution (where it represents if the data at that half hour is measured or gap filled at a given quality). 70% might be decent? We could also have that be a parameter
+
+```{r}
+#Note; this won't work properly on HH data
+#Replaces the NEE_VUT_REF values with NA when their QC is less than a threshold
+filter_fluxes <- function(flux_df, QC_threshold){
+  indexes_to_filter <- flux_df$NEE_VUT_REF_QC < QC_threshold
+  flux_df$NEE_VUT_REF <- replace(flux_df$NEE_VUT_REF, indexes_to_filter, NA)
+  return(flux_df)
+}
+```
+
+Plot time series of flux all overlaid (weekly)
+
+```{r}
+MM_data |> filter_fluxes(0.8) |> ggplot(aes(x = TIMESTAMP, y = NEE_VUT_REF, color = Site)) + geom_line() +
+  labs(x = "Time", y = "NEE", color = "Site")
 ```
