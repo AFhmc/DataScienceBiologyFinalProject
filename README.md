@@ -15,3 +15,4 @@
 - `Data/MODIS_NDVI_data.csv`: Directly-downloaded NDVI data from AppEEARS MODIS Terra (https://appeears.earthdatacloud.nasa.gov/) 
 - `nikhilexploration.qmd`: Fixes date object format for Fluxnet data
 - `Anna_Exploratory_File.qmd`: Imports and cleans up all data
+
