@@ -182,3 +182,29 @@ Plot time series of flux all overlaid (weekly)
 MM_data |> filter_fluxes(0.8) |> ggplot(aes(x = TIMESTAMP, y = NEE_VUT_REF, color = Site)) + geom_line() +
   labs(x = "Time", y = "NEE", color = "Site")
 ```
+
+Function to make two column dataframe with each column being some variable at a site
+
+```{r}
+make_site_df <- function(data_df, site1, site2, variable){
+  site1_data <- data_df |> filter(Site == site1) |> pull(variable)
+  site2_data <- data_df |> filter(Site == site2) |> pull(variable)
+  return_df <- tibble(site1 = site1_data, site2 = site2_data)
+  return(return_df)
+}
+
+
+
+```
+
+Try plotting that:
+
+```{r}
+site1name <- "CA-NS1"
+site2name <- "CA-NS6"
+variable <-"NEE_VUT_REF"
+
+WW_data |> filter_fluxes(0.8) |> make_site_df(site1name, site2name, variable) |>
+  ggplot(aes(x = site1, y = site2)) + geom_point() + 
+  labs(x = site1name, y = site2name, title = variable)
+```
