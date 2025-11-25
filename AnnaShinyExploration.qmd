@@ -1,0 +1,288 @@
+---
+title: "Anna Shiny Exploration"
+format: html
+server: shiny
+---
+
+## Shiny Documents
+
+This Quarto document is made interactive using Shiny. Interactive documents allow readers to modify parameters and see the results immediately. Learn more about Shiny interactive documents at <https://quarto.org/docs/interactive/shiny/>.
+
+## Inputs and Outputs
+
+You can embed Shiny inputs and outputs in your document. Outputs are automatically updated whenever inputs change. This demonstrates how a standard R plot can be made interactive:
+```{r}
+library(bslib)
+```
+
+
+
+
+#Read in all Data
+
+```{r}
+#| context: server
+
+
+library(tidyverse)
+library(lubridate)
+
+resolution <- "WW"
+
+sites <- c("CA-NS1", "CA-NS2", "CA-NS3", "CA-NS4", "CA-NS5", "CA-NS6", "CA-NS7")
+
+CA_NS1 <- tibble(read.csv(str_c("Data/",sites[1],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS2 <- tibble(read.csv(str_c("Data/",sites[2],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS3 <- tibble(read.csv(str_c("Data/",sites[3],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS4 <- tibble(read.csv(str_c("Data/",sites[4],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS5 <- tibble(read.csv(str_c("Data/",sites[5],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS6 <- tibble(read.csv(str_c("Data/",sites[6],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS7 <- tibble(read.csv(str_c("Data/",sites[7],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+
+WW_data <- bind_rows(list("CA-NS1" = CA_NS1,"CA-NS2" = CA_NS2,"CA-NS3" = CA_NS3,"CA-NS4" = CA_NS4,"CA-NS5" = CA_NS5,"CA-NS6" = CA_NS6,"CA-NS7" = CA_NS7), .id = "Site")
+
+
+resolution <- "MM"
+
+sites <- c("CA-NS1", "CA-NS2", "CA-NS3", "CA-NS4", "CA-NS5", "CA-NS6", "CA-NS7")
+
+CA_NS1 <- tibble(read.csv(str_c("Data/",sites[1],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS2 <- tibble(read.csv(str_c("Data/",sites[2],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS3 <- tibble(read.csv(str_c("Data/",sites[3],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS4 <- tibble(read.csv(str_c("Data/",sites[4],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS5 <- tibble(read.csv(str_c("Data/",sites[5],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS6 <- tibble(read.csv(str_c("Data/",sites[6],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS7 <- tibble(read.csv(str_c("Data/",sites[7],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+MM_data <- bind_rows(list("CA-NS1" = CA_NS1,"CA-NS2" = CA_NS2,"CA-NS3" = CA_NS3,"CA-NS4" = CA_NS4,"CA-NS5" = CA_NS5,"CA-NS6" = CA_NS6,"CA-NS7" = CA_NS7), .id = "Site")
+
+resolution <- "DD"
+
+sites <- c("CA-NS1", "CA-NS2", "CA-NS3", "CA-NS4", "CA-NS5", "CA-NS6", "CA-NS7")
+
+CA_NS1 <- tibble(read.csv(str_c("Data/",sites[1],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS2 <- tibble(read.csv(str_c("Data/",sites[2],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS3 <- tibble(read.csv(str_c("Data/",sites[3],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS4 <- tibble(read.csv(str_c("Data/",sites[4],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS5 <- tibble(read.csv(str_c("Data/",sites[5],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS6 <- tibble(read.csv(str_c("Data/",sites[6],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS7 <- tibble(read.csv(str_c("Data/",sites[7],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+
+DD_data <- bind_rows(list("CA-NS1" = CA_NS1,"CA-NS2" = CA_NS2,"CA-NS3" = CA_NS3,"CA-NS4" = CA_NS4,"CA-NS5" = CA_NS5,"CA-NS6" = CA_NS6,"CA-NS7" = CA_NS7), .id = "Site")
+
+
+DD_data <- DD_data |> mutate(TIMESTAMP = ymd(str_c(str_sub(TIMESTAMP, 1, 4), 
+                                                   str_sub(TIMESTAMP, 5, 6), 
+                                                   str_sub(TIMESTAMP, 7, 8), sep = '-')))
+
+WW_data <- WW_data |> mutate(TIMESTAMP = ymd(str_c(str_sub(TIMESTAMP_START, 1, 4), 
+                                                   str_sub(TIMESTAMP_START, 5, 6), 
+                                                   str_sub(TIMESTAMP_START, 7, 8), sep = '-')))
+
+MM_data <- MM_data |> mutate(TIMESTAMP = ym(str_c(str_sub(TIMESTAMP, 1, 4), 
+                                                  str_sub(TIMESTAMP, 5, 6), sep = '-')))
+
+full_NDVI_data <- read.csv("Data/MODIS_NDVI_data.csv")
+#note: currently ignores quality flags
+NDVI_data <- full_NDVI_data |> select(ID, Date, MOD13A1_061__500m_16_days_NDVI) |> 
+  rename(Site = ID, NDVI = MOD13A1_061__500m_16_days_NDVI) |>
+  mutate(Date = ymd(Date))
+```
+
+
+#Get Global Functions
+```{r}
+#| context: server
+#Note; this won't work properly on HH data
+#Replaces the NEE_VUT_REF values with NA when their QC is less than a threshold
+filter_fluxes <- function(flux_df, QC_threshold){
+  indexes_to_filter <- flux_df$NEE_VUT_REF_QC < QC_threshold
+  flux_df$NEE_VUT_REF <- replace(flux_df$NEE_VUT_REF, indexes_to_filter, NA)
+  return(flux_df)
+}
+
+filter_variables <- function(flux_df, QC_threshold,variables){
+  for (variable in variables){
+    indexes_to_filter <- flux_df[,paste(variable, "QC", sep = "_")] < QC_threshold
+    flux_df[, variable] <- replace(flux_df[,variable], indexes_to_filter, NA)
+  }
+  return(flux_df)
+}
+
+```
+
+
+#Set up UI:
+
+```{r}
+available_variables <- c("Temperature", "Shortwave Radiation", "Net Radiation", "Vapor Pressure Deficit", "Precipitation")
+
+available_sites <- c("1850 Burn", "1930 Burn", "1964 Burn (dry)", "1964 Burn (wet)", "1981 Burn", "1989 Burn", "1998 Burn")
+
+available_timescales <- c("Daily", "Weekly", "Monthly")
+
+navset_card_underline(
+  nav_panel("Variable vs NEE Scatterplot", 
+            card(card_body(
+                "
+                This plot allows you to investigate the relationship between a variable of your choice and NEE at your desired 
+                timescale (default weekly) in scatterplot form. You can choose which site you want to display in each of the two
+                panels to do a side by side comparison
+                "
+            )),
+            layout_sidebar(
+              sidebar = sidebarPanel(
+                accordion(
+                  open = c("Variable"),
+                  accordion_panel(
+                    "Variable",
+                    radioButtons("chosenVariable", "X axis variable:", available_variables, selected = "Temperature")
+                  ),
+                  accordion_panel(
+                    "Site 1",
+                    radioButtons("chosenSite1", "Site 1:", available_sites, selected = "1850 Burn")
+                  ), 
+                  accordion_panel(
+                    "Site 2",
+                    radioButtons("chosenSite2", "Site 2:", available_sites, selected = "1998 Burn")
+                  ),
+                  accordion_panel(
+                    "Timescales",
+                    radioButtons("chosenTimescale", "Temporal Resolution:", available_timescales, selected = "Weekly")
+                  ))),
+              layout_columns(
+                  plotOutput("Site1VarNEEScatterplot"),
+                  plotOutput("Site2VarNEEScatterplot")
+              )
+            ))
+)
+```
+
+
+
+```{r}
+#| context: server
+
+variables_names_to_ids <- c("Temperature" = "TA_F", "Shortwave Radiation" = "SW_IN_F", "Longwave Radiation" = "LW_IN_F",
+                            "Net Radiation" = "NETRAD", "Vapor Pressure Deficit" = "VPD_F", "Pressure" = "PA_F", 
+                            "Precipitation" = "P_F", "Wind Speed" = "WS_F")
+
+sites_names_to_ids <- c("1850 Burn" = "CA-NS1", "1930 Burn" = "CA-NS2", "1964 Burn (dry)" = "CA-NS3", 
+                        "1964 Burn (wet)" = "CA-NS4", "1981 Burn" = "CA-NS5", "1989 Burn" = "CA-NS6", "1998 Burn" = "CA-NS7")
+
+filtering_threshold <- 0.8
+
+site_colors <- c("CA-NS1" = "#f92104", "CA-NS2" = "#f9a600", "CA-NS3" = "#2df900", "CA-NS4" = "#00f9f9", 
+                 "CA-NS5" = "#0031f9", "CA-NS6" = "#9202f9", "CA-NS7" = "#f902d8")
+
+data <- reactive({
+  if (input$chosenTimescale == "Weekly"){
+    data <- WW_data
+  } else if (input$chosenTimescale == "Daily"){
+    data <- DD_data
+  } else {
+    data <- MM_data
+  }
+  data
+})
+
+Xscale <- reactive({
+  data <- data()
+  variable_id <- variables_names_to_ids[input$chosenVariable]
+  min_val <- min(data$variable_id)
+  max_val <- max(data$variable_id)
+  range_val <- range(data$variable_id)[1] - range(data$variable_id)[2]
+  c(min_val - 0.1*range_val, max_val + .1*range_val)
+})
+
+Yscale <- reactive({
+  data <- data()
+  min_val <- min(data$NEE_VUT_REF)
+  max_val <- max(data$NEE_VUT_REF)
+  range_val <- range(data$NEE_VUT_REF)[1] - range(data$NEE_VUT_REF)[2]
+  c(min_val - 0.1*range_val, max_val + .1*range_val)
+})
+
+output$Site1VarNEEScatterplot <- renderPlot({
+  
+  variable_id <- variables_names_to_ids[input$chosenVariable]
+  site_id = sites_names_to_ids[input$chosenSite1]
+  
+  
+  siteData <- data() 
+  siteData <- siteData |> filter(Site == site_id) |> 
+                       filter_variables(0.8, c("NEE_VUT_REF", variable_id))
+  
+  xlims <- Xscale()
+  ylims <- Yscale()
+  
+  siteData |> ggplot(aes(x = !!sym(variable_id), y = NEE_VUT_REF)) +
+            geom_point(alpha = 0.7, color = site_colors[site_id]) + 
+            geom_smooth(se = T, color = "black") + scale_alpha(guide = "none") +
+            labs(x = input$chosenVariable, y = "NEE_VUT_REF", 
+                 title = paste("Relationship between", input$chosenVariable, "and NEE at the", input$chosenSite, "Site")) +
+            xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2])
+})
+
+output$Site2VarNEEScatterplot <- renderPlot({
+
+  variable_id <- variables_names_to_ids[input$chosenVariable]
+  site_id = sites_names_to_ids[input$chosenSite2]
+  
+  siteData <- data() |> filter(Site == site_id) |> 
+                       filter_variables(0.8, c("NEE_VUT_REF", variable_id))
+  
+  xlims <- Xscale()
+  ylims <- Yscale()
+  
+  siteData |> ggplot(aes(x = !!sym(variable_id), y = NEE_VUT_REF)) +
+            geom_point(alpha = 0.7, color = site_colors[site_id]) + 
+            geom_smooth(se = T, color = "black") + scale_alpha(guide = "none") +
+            labs(x = input$chosenVariable, y = "NEE_VUT_REF",
+                 title = paste("Relationship between", input$chosenVariable, "and NEE at the", input$chosenSite, "Site")) +
+            xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2])
+})
+
+```
+
