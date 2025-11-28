@@ -176,6 +176,18 @@ filter_fluxes <- function(flux_df, QC_threshold){
 }
 ```
 
+Make a more general version that can handle multiple variables at once:
+
+```{r}
+filter_variables <- function(flux_df, QC_threshold,variables){
+  for (variable in variables){
+    indexes_to_filter <- flux_df[,paste(variable, "QC", sep = "_")] < QC_threshold
+    flux_df[, variable] <- replace(flux_df[,variable], indexes_to_filter, NA)
+  }
+  return(flux_df)
+}
+```
+
 Plot time series of flux all overlaid (weekly)
 
 ```{r}
@@ -207,4 +219,23 @@ variable <-"NEE_VUT_REF"
 WW_data |> filter_fluxes(0.8) |> make_site_df(site1name, site2name, variable) |>
   ggplot(aes(x = site1, y = site2)) + geom_point() + 
   labs(x = site1name, y = site2name, title = variable)
+```
+
+Make plot of variable against flux for all the sites
+
+```{r}
+variable <- "TA_F"
+var <- enquo(variable)
+
+site_colors <- c("CA-NS2" = "#f92104", "CA-NS6" = "#0014f7")
+
+DD_data |> 
+  filter(Site %in% c("CA-NS2", "CA-NS6"))|> 
+  filter_variables(0.8, c("NEE_VUT_REF", variable)) |>
+            ggplot(aes(x = !!sym(variable), y = NEE_VUT_REF, color = Site)) +
+            geom_point( alpha = 0.5) + 
+            geom_smooth(se = T) + scale_alpha(guide = "none") +
+            scale_color_manual(values = site_colors) + 
+            labs(x = variable, y = "NEE_VUT_REF")
+
 ```

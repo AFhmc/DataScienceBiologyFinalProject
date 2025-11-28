@@ -4,26 +4,21 @@ format: html
 server: shiny
 ---
 
-## Shiny Documents
 
-This Quarto document is made interactive using Shiny. Interactive documents allow readers to modify parameters and see the results immediately. Learn more about Shiny interactive documents at <https://quarto.org/docs/interactive/shiny/>.
 
-## Inputs and Outputs
-
-You can embed Shiny inputs and outputs in your document. Outputs are automatically updated whenever inputs change. This demonstrates how a standard R plot can be made interactive:
 ```{r}
+#| context: setup
+#| include: false
 library(bslib)
 ```
 
 
 
 
-#Read in all Data
-
-```{r}
-#| context: server
-
-
+```{r} 
+#| context: setup
+#| include: false
+# Read in all data
 library(tidyverse)
 library(lubridate)
 
@@ -51,7 +46,6 @@ CA_NS6 <- tibble(read.csv(str_c("Data/",sites[6],"/", resolution,".csv"),
 
 CA_NS7 <- tibble(read.csv(str_c("Data/",sites[7],"/", resolution,".csv"),
                                na.strings = "-9999"))
-
 
 WW_data <- bind_rows(list("CA-NS1" = CA_NS1,"CA-NS2" = CA_NS2,"CA-NS3" = CA_NS3,"CA-NS4" = CA_NS4,"CA-NS5" = CA_NS5,"CA-NS6" = CA_NS6,"CA-NS7" = CA_NS7), .id = "Site")
 
@@ -126,14 +120,16 @@ MM_data <- MM_data |> mutate(TIMESTAMP = ym(str_c(str_sub(TIMESTAMP, 1, 4),
 full_NDVI_data <- read.csv("Data/MODIS_NDVI_data.csv")
 #note: currently ignores quality flags
 NDVI_data <- full_NDVI_data |> select(ID, Date, MOD13A1_061__500m_16_days_NDVI) |> 
-  rename(Site = ID, NDVI = MOD13A1_061__500m_16_days_NDVI) |>
+  rename("Site" = ID, "NDVI" = MOD13A1_061__500m_16_days_NDVI) |>
   mutate(Date = ymd(Date))
 ```
 
 
-#Get Global Functions
 ```{r}
-#| context: server
+#| context: setup
+#| include: false
+
+#Get Global Functions
 #Note; this won't work properly on HH data
 #Replaces the NEE_VUT_REF values with NA when their QC is less than a threshold
 filter_fluxes <- function(flux_df, QC_threshold){
@@ -153,10 +149,12 @@ filter_variables <- function(flux_df, QC_threshold,variables){
 ```
 
 
-#Set up UI:
 
 ```{r}
+#Set up UI
+
 available_variables <- c("Temperature", "Shortwave Radiation", "Net Radiation", "Vapor Pressure Deficit", "Precipitation")
+
 
 available_sites <- c("1850 Burn", "1930 Burn", "1964 Burn (dry)", "1964 Burn (wet)", "1981 Burn", "1989 Burn", "1998 Burn")
 
@@ -168,7 +166,8 @@ navset_card_underline(
                 "
                 This plot allows you to investigate the relationship between a variable of your choice and NEE at your desired 
                 timescale (default weekly) in scatterplot form. You can choose which site you want to display in each of the two
-                panels to do a side by side comparison
+                panels to do a side by side comparison. The nearest-neighbor smoothing averages of the relationship between all
+                sites is also shown.
                 "
             )),
             layout_sidebar(
@@ -191,11 +190,18 @@ navset_card_underline(
                     "Timescales",
                     radioButtons("chosenTimescale", "Temporal Resolution:", available_timescales, selected = "Weekly")
                   ))),
-              layout_columns(
-                  plotOutput("Site1VarNEEScatterplot"),
-                  plotOutput("Site2VarNEEScatterplot")
-              )
-            ))
+              accordion(
+                accordion_panel(
+                  "Comparative Site Scatterplots",
+                  layout_columns(
+                      plotOutput("Site1VarNEEScatterplot"),
+                      plotOutput("Site2VarNEEScatterplot")
+                )),
+                accordion_panel(
+                  "All Site Splines",
+                  plotOutput("VarNEESplineplot")
+                )
+              )))
 )
 ```
 
@@ -211,6 +217,11 @@ variables_names_to_ids <- c("Temperature" = "TA_F", "Shortwave Radiation" = "SW_
 sites_names_to_ids <- c("1850 Burn" = "CA-NS1", "1930 Burn" = "CA-NS2", "1964 Burn (dry)" = "CA-NS3", 
                         "1964 Burn (wet)" = "CA-NS4", "1981 Burn" = "CA-NS5", "1989 Burn" = "CA-NS6", "1998 Burn" = "CA-NS7")
 
+
+sites_ids_to_names <- c("CA-NS1" = "1850 Burn", "CA-NS2" = "1930 Burn", "CA-NS3" = "1964 Burn (dry)", 
+                        "CA-NS4" = "1964 Burn (wet)", "CA-NS5" = "1981 Burn", "CA-NS6" = "1989 Burn", "CA-NS7" = "1998 Burn")
+
+
 filtering_threshold <- 0.8
 
 site_colors <- c("CA-NS1" = "#f92104", "CA-NS2" = "#f9a600", "CA-NS3" = "#2df900", "CA-NS4" = "#00f9f9", 
@@ -224,7 +235,7 @@ data <- reactive({
   } else {
     data <- MM_data
   }
-  data
+  return(data)
 })
 
 Xscale <- reactive({
@@ -258,11 +269,11 @@ output$Site1VarNEEScatterplot <- renderPlot({
   ylims <- Yscale()
   
   siteData |> ggplot(aes(x = !!sym(variable_id), y = NEE_VUT_REF)) +
+            xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2]) +
             geom_point(alpha = 0.7, color = site_colors[site_id]) + 
             geom_smooth(se = T, color = "black") + scale_alpha(guide = "none") +
             labs(x = input$chosenVariable, y = "NEE_VUT_REF", 
-                 title = paste("Relationship between", input$chosenVariable, "and NEE at the", input$chosenSite, "Site")) +
-            xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2])
+                 title = paste("Relationship between", input$chosenVariable, "\n and NEE at the", input$chosenSite1, "Site"))
 })
 
 output$Site2VarNEEScatterplot <- renderPlot({
@@ -277,11 +288,28 @@ output$Site2VarNEEScatterplot <- renderPlot({
   ylims <- Yscale()
   
   siteData |> ggplot(aes(x = !!sym(variable_id), y = NEE_VUT_REF)) +
+            xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2]) +
             geom_point(alpha = 0.7, color = site_colors[site_id]) + 
             geom_smooth(se = T, color = "black") + scale_alpha(guide = "none") +
             labs(x = input$chosenVariable, y = "NEE_VUT_REF",
-                 title = paste("Relationship between", input$chosenVariable, "and NEE at the", input$chosenSite, "Site")) +
-            xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2])
+                 title = paste("Relationship between", input$chosenVariable, "\n and NEE at the", input$chosenSite2, "Site")) 
+})
+
+output$VarNEESplineplot <- renderPlot({
+
+  variable_id <- variables_names_to_ids[input$chosenVariable]
+  
+  variableData <- data() |> filter_variables(0.8, c("NEE_VUT_REF", variable_id))
+  
+  xlims <- Xscale()
+  ylims <- Yscale()
+  
+  variableData |> ggplot(aes(x = !!sym(variable_id), y = NEE_VUT_REF, color = Site)) +
+            xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2]) +
+            geom_smooth(se = T, alpha = 0.2) + scale_alpha(guide = "none") +
+            scale_color_manual(labels = sites_ids_to_names, values = site_colors) +
+            labs(x = input$chosenVariable, y = "NEE_VUT_REF",
+                 title = paste("Relationship between", input$chosenVariable, "and NEE at all sites")) 
 })
 
 ```
