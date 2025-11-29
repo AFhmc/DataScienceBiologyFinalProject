@@ -225,17 +225,42 @@ Make plot of variable against flux for all the sites
 
 ```{r}
 variable <- "TA_F"
-var <- enquo(variable)
 
 site_colors <- c("CA-NS2" = "#f92104", "CA-NS6" = "#0014f7")
 
-DD_data |> 
+filter_variables <- function(flux_df, QC_threshold,variables){
+  for (variable in variables){
+    if (substr(variable ,1,3) == "GPP" | substr(variable ,1,4) == "RECO"){
+      #GPP and RECO don't have their own quality flags they just use the NEE one
+      indexes_to_filter <- flux_df[,"NEE_VUT_REF_QC"] < QC_threshold
+      flux_df[, variable] <- replace(flux_df[,variable], indexes_to_filter, NA)
+    } else {
+      indexes_to_filter <- flux_df[,paste(variable, "QC", sep = "_")] < QC_threshold
+      flux_df[, variable] <- replace(flux_df[,variable], indexes_to_filter, NA)
+    }
+  }
+  return(flux_df)
+}
+
+yvar <- "RECO_NT_VUT_REF"
+
+WW_data |> 
   filter(Site %in% c("CA-NS2", "CA-NS6"))|> 
-  filter_variables(0.8, c("NEE_VUT_REF", variable)) |>
-            ggplot(aes(x = !!sym(variable), y = NEE_VUT_REF, color = Site)) +
+  filter_variables(0.8, c(yvar, variable)) |>
+            ggplot(aes(x = !!sym(variable), y = !!sym(yvar), color = Site)) +
             geom_point( alpha = 0.5) + 
             geom_smooth(se = T) + scale_alpha(guide = "none") +
             scale_color_manual(values = site_colors) + 
-            labs(x = variable, y = "NEE_VUT_REF")
+            labs(x = variable, y = yvar)
 
+```
+
+
+To get evapotransporation I'm using the LE.to.ET function from the bigleaf package (which is designed to work with eddy covariance data)
+```{r}
+library(bigleaf)
+WW_data <-WW_data |> mutate(ET = LE.to.ET(LE_F_MDS, TA_F), ET_QC = LE_F_MDS_QC)
+MM_data <-MM_data |> mutate(ET = LE.to.ET(LE_F_MDS, TA_F), ET_QC = LE_F_MDS_QC)
+DD_data <-DD_data |> mutate(ET = LE.to.ET(LE_F_MDS, TA_F), ET_QC = LE_F_MDS_QC)
+HH_data <-HH_data |> mutate(ET = LE.to.ET(LE_F_MDS, TA_F), ET_QC = LE_F_MDS_QC)
 ```
