@@ -176,11 +176,15 @@ available_sites <- c("1850 Burn", "1930 Burn", "1964 Burn (dry)", "1964 Burn (we
 
 available_timescales <- c("Daily", "Weekly", "Monthly")
 
+available_statistics <- c("Min", "Max", "Mean", "STD", "Min Day of Year", "Max Day of Year", "Relational Correlation", 
+                          "Relational Single Regression Slope", "Relational Multiple Regression Slope", 
+                          "Relational Nearest Neighbor RSS")
+
 navset_card_underline(
-  nav_panel("Variable vs NEE Scatterplot", 
+  nav_panel("Variable vs Flux By Site", 
             card(card_body(
                 "
-                This plot allows you to investigate the relationship between a variable of your choice and NEE, GPP, or RECO
+                These plots allow you to investigate the relationship between a variable of your choice and NEE, GPP, or RECO
                 at your desired timescale (default weekly) in scatterplot form. You can choose which site you want to display 
                 in each of the two panels to do a side by side comparison. The nearest-neighbor smoothing averages of the 
                 relationship between all sites is also shown.
@@ -189,7 +193,7 @@ navset_card_underline(
             layout_sidebar(
               sidebar = sidebarPanel(
                 accordion(
-                  open = c("Variable"),
+                  open = c("Variables"),
                   accordion_panel(
                     "Variables",
                     radioButtons("chosenVariable", "Environmental Variable", available_variables, selected = "Temperature"),
@@ -218,7 +222,35 @@ navset_card_underline(
                   "All Site Splines",
                   plotOutput("VarNEESplineplot")
                 )
-              )))
+              ))),
+  nav_panel("Variable Stats By Years Since Burn",
+             card(card_body(
+                "
+                This plot allows you to investigate the relationship between some common stats about an investigated variable and the
+                number of years since burn. These stats include the min, max, mean, and standard deviation of a single variable
+                (daily scale) and the day of the year at which a given variable was highest or lowest. This also allows you to
+                look at stats about the relationship between a given variable and a flux variable; including the R^2 of the
+                correlation between the investigated and relational (flux) variable, the slope of the regression line between the predictor and
+                the flux variable (either single or multiple), and the RSS of the nearest neighbor regression line displayed in
+                the Variable vs Flux by Site (a measure of how predictable flux is from that variable); all at the daily scale.
+                "
+            )),
+            layout_sidebar(
+              sidebar = sidebarPanel(
+                accordion(
+                  open = c("Stat Choice", "Variables"),
+                  accordion_panel(
+                    "Stat Choice",
+                    radioButtons("chosenStat", "Statistic to Plot", available_statistics,
+                                 selected = "Min")),
+                  accordion_panel(
+                    "Variables",
+                    radioButtons("chosenVariable2", "Investigated Variable", append(available_variables, available_Yvariables),
+                                 selected = "Temperature"),
+                    radioButtons("chosenYVariable2", "Relational Variable", available_Yvariables, selected = "NEE")
+                  ))),
+              plotOutput("StatPlot")
+            ))
 )
 ```
 
@@ -339,5 +371,59 @@ output$VarNEESplineplot <- renderPlot({
                  title = paste("Relationship between", input$chosenVariable, "and ",input$chosenYVariable," at all sites")) 
 })
 
+```
+
+
+```{r}
+#| context: server
+#| include: FALSE
+
+get_stats <- reactive({
+  Xvar <- input$chosenVariable2
+  Yvar <- input$chosenYVariable2
+  Xdata <- DD_data |> filter_variables(0.8, c(Xvar))
+  days_of_year <- Xdata |> pull(var = TIMESTAMP) |> yday()
+  Xdata <- Xdata |> mutate("DOY" = days_of_year)
+  
+  min_val <- Xdata |> pull(var = Xvar) |> min()
+  max_val <- Xdata |> pull(var = Xvar) |> max()
+  mean_val <- Xdata |> pull(var = Xvar) |> mean()
+  std_val <- Xdata |> pull(var = Xvar) |> sd()
+  
+  min_ind <- Xdata |> pull(var = Xvar) |> which.min()
+  min_doy <- Xdata[min_ind, "DOY"]
+  max_ind <- Xdata |> pull(var = Xvar) |> which.max()
+  max_doy <- Xdata[max_ind, "DOY"]
+  
+  BothData <-  DD_data |> filter_variables(0.8, c(Xvar, Yvar))
+  
+  
+  
+  if (Xvar %in% available_variables){
+   AllData <- DD_data|> filter_variables(0.8, c(variables_names_to_ids[available_variables], Yvar))
+   AllData <- AllData[,c(variables_names_to_ids[available_variables], Yvar)] 
+  } else {
+   AllData <- DD_data |> filter_variables(0.8, c(variables_names_to_ids[available_variables], Xvar, Yvar))
+   AllData <- AllData[,c(variables_names_to_ids[available_variables], Xvar, Yvar)] 
+  }
+  
+  single_regression <- lm(as.formula(paste(Yvar, "~", Xvar)), data = BothData)
+  
+  correlation <- summary(single_regression)$r.squared
+  single_slope <- summary(single_regression)$coefficients[Xvar, "Estimate"]
+  
+  
+  multiple_regression <- lm(as.formula(paste(Yvar, "~ .")), data = AllData)
+  multiple_slope <- summary(single_regression)$coefficients[Xvar, "Estimate"]
+  
+  loess_regression <- loess(as.formula(paste(Yvar, "~", Xvar)), data = BothData)
+  loess_RSS <- sum(summary(loess_regression)$residuals ** 2)
+  
+  
+  c("Min" = min_val, "Max" = max_val, "Mean" = mean_val, "STD" = std_val, "Min Day of Year" = min_doy, 
+    "Max Day of Year" = max_doy, "Relational Correlation" = correlation, "Relational Single Regression Slope" = single_slope,
+    "Relational Multiple Regression Slope" = multiple_slope, "Relational Nearest Neighbor RSS" = loess_RSS)
+  
+})
 ```
 
