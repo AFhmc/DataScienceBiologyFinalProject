@@ -1,19 +1,15 @@
 ---
-title: "Anna Shiny Exploration"
+title: "Carbon Flux in Boreal Forests"
 format: html
 server: shiny
 ---
-
-
 
 ```{r}
 #| context: setup
 #| include: false
 library(bslib)
+library(rsconnect)
 ```
-
-
-
 
 ```{r} 
 #| context: setup
@@ -347,7 +343,6 @@ navset_card_underline(
 
 
 
-Note: I'm using the nighttime partitioning method for GPP
 ```{r}
 #| context: server
 
