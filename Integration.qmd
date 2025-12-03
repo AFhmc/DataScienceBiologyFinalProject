@@ -1,0 +1,659 @@
+---
+title: "Anna Shiny Exploration"
+format: html
+server: shiny
+---
+
+
+
+```{r}
+#| context: setup
+#| include: false
+library(bslib)
+```
+
+
+
+
+```{r} 
+#| context: setup
+#| include: false
+# Read in all data
+library(tidyverse)
+library(lubridate)
+
+resolution <- "WW"
+
+sites <- c("CA-NS1", "CA-NS2", "CA-NS3", "CA-NS4", "CA-NS5", "CA-NS6", "CA-NS7")
+
+CA_NS1 <- tibble(read.csv(str_c("Data/",sites[1],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS2 <- tibble(read.csv(str_c("Data/",sites[2],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS3 <- tibble(read.csv(str_c("Data/",sites[3],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS4 <- tibble(read.csv(str_c("Data/",sites[4],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS5 <- tibble(read.csv(str_c("Data/",sites[5],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS6 <- tibble(read.csv(str_c("Data/",sites[6],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS7 <- tibble(read.csv(str_c("Data/",sites[7],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+WW_data <- bind_rows(list("CA-NS1" = CA_NS1,"CA-NS2" = CA_NS2,"CA-NS3" = CA_NS3,"CA-NS4" = CA_NS4,"CA-NS5" = CA_NS5,"CA-NS6" = CA_NS6,"CA-NS7" = CA_NS7), .id = "Site")
+
+
+resolution <- "MM"
+
+sites <- c("CA-NS1", "CA-NS2", "CA-NS3", "CA-NS4", "CA-NS5", "CA-NS6", "CA-NS7")
+
+CA_NS1 <- tibble(read.csv(str_c("Data/",sites[1],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS2 <- tibble(read.csv(str_c("Data/",sites[2],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS3 <- tibble(read.csv(str_c("Data/",sites[3],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS4 <- tibble(read.csv(str_c("Data/",sites[4],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS5 <- tibble(read.csv(str_c("Data/",sites[5],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS6 <- tibble(read.csv(str_c("Data/",sites[6],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS7 <- tibble(read.csv(str_c("Data/",sites[7],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+MM_data <- bind_rows(list("CA-NS1" = CA_NS1,"CA-NS2" = CA_NS2,"CA-NS3" = CA_NS3,"CA-NS4" = CA_NS4,"CA-NS5" = CA_NS5,"CA-NS6" = CA_NS6,"CA-NS7" = CA_NS7), .id = "Site")
+
+resolution <- "DD"
+
+sites <- c("CA-NS1", "CA-NS2", "CA-NS3", "CA-NS4", "CA-NS5", "CA-NS6", "CA-NS7")
+
+CA_NS1 <- tibble(read.csv(str_c("Data/",sites[1],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS2 <- tibble(read.csv(str_c("Data/",sites[2],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS3 <- tibble(read.csv(str_c("Data/",sites[3],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS4 <- tibble(read.csv(str_c("Data/",sites[4],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS5 <- tibble(read.csv(str_c("Data/",sites[5],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS6 <- tibble(read.csv(str_c("Data/",sites[6],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+CA_NS7 <- tibble(read.csv(str_c("Data/",sites[7],"/", resolution,".csv"),
+                               na.strings = "-9999"))
+
+
+DD_data <- bind_rows(list("CA-NS1" = CA_NS1,"CA-NS2" = CA_NS2,"CA-NS3" = CA_NS3,"CA-NS4" = CA_NS4,"CA-NS5" = CA_NS5,"CA-NS6" = CA_NS6,"CA-NS7" = CA_NS7), .id = "Site")
+
+
+DD_data <- DD_data |> mutate(TIMESTAMP = ymd(str_c(str_sub(TIMESTAMP, 1, 4), 
+                                                   str_sub(TIMESTAMP, 5, 6), 
+                                                   str_sub(TIMESTAMP, 7, 8), sep = '-')))
+
+WW_data <- WW_data |> mutate(TIMESTAMP = ymd(str_c(str_sub(TIMESTAMP_START, 1, 4), 
+                                                   str_sub(TIMESTAMP_START, 5, 6), 
+                                                   str_sub(TIMESTAMP_START, 7, 8), sep = '-')))
+
+MM_data <- MM_data |> mutate(TIMESTAMP = ym(str_c(str_sub(TIMESTAMP, 1, 4), 
+                                                  str_sub(TIMESTAMP, 5, 6), sep = '-')))
+
+full_NDVI_data <- read.csv("Data/MODIS_NDVI_data.csv")
+#note: currently ignores quality flags
+NDVI_data <- full_NDVI_data |> select(ID, Date, MOD13A1_061__500m_16_days_NDVI) |> 
+  rename(#"Site" = ID, 
+         "NDVI" = MOD13A1_061__500m_16_days_NDVI) |>
+  mutate(Date = ymd(Date))
+
+DD_16 <- NDVI_data |>
+  mutate(Date = as.Date(Date)) |>
+  left_join(DD_data, by = join_by("Date" == "TIMESTAMP", "ID" == "Site"))
+
+#Get evapotranspiration data
+library(bigleaf)
+WW_data <-WW_data |> mutate(ET = LE.to.ET(LE_F_MDS, TA_F), ET_QC = LE_F_MDS_QC)
+MM_data <-MM_data |> mutate(ET = LE.to.ET(LE_F_MDS, TA_F), ET_QC = LE_F_MDS_QC)
+DD_data <-DD_data |> mutate(ET = LE.to.ET(LE_F_MDS, TA_F), ET_QC = LE_F_MDS_QC)
+```
+
+
+```{r}
+#| context: setup
+#| include: false
+
+#Get Global Functions
+#Note; this won't work properly on HH data
+#Replaces the NEE_VUT_REF values with NA when their QC is less than a threshold
+filter_fluxes <- function(flux_df, QC_threshold){
+  indexes_to_filter <- flux_df$NEE_VUT_REF_QC < QC_threshold
+  flux_df$NEE_VUT_REF <- replace(flux_df$NEE_VUT_REF, indexes_to_filter, NA)
+  return(flux_df)
+}
+
+filter_variables <- function(flux_df, QC_threshold,variables){
+  for (variable in variables){
+    if (substr(variable ,1,3) == "GPP" | substr(variable ,1,4) == "RECO"){
+      #GPP and RECO don't have their own quality flags they just use the NEE one
+      indexes_to_filter <- flux_df[,"NEE_VUT_REF_QC"] < QC_threshold
+      flux_df[, variable] <- replace(flux_df[,variable], indexes_to_filter, NA)
+    } else {
+      indexes_to_filter <- flux_df[,paste(variable, "QC", sep = "_")] < QC_threshold
+      flux_df[, variable] <- replace(flux_df[,variable], indexes_to_filter, NA)
+    }
+  }
+  return(flux_df)
+}
+
+```
+
+
+
+```{r}
+#Set up UI
+
+available_variables <- c("Temperature", "Shortwave Radiation", "Net Radiation", "Vapor Pressure Deficit", 
+                         "Precipitation", "Evapotranspiration", "PPFD")
+
+available_Yvariables <- c("NEE", "GPP", "RECO")
+
+
+available_sites <- c("1850 Burn", "1930 Burn", "1964 Burn (dry)", "1964 Burn (wet)", "1981 Burn", "1989 Burn", "1998 Burn")
+
+available_timescales <- c("Daily", "Weekly", "Monthly")
+
+available_statistics <- c("Min", "Max", "Mean", "STD", "Min Day of Year", "Max Day of Year", "Relational Correlation", 
+                          "Relational Single Regression Slope", "Relational Multiple Regression Slope", 
+                          "Relational Nearest Neighbor RSS")
+
+available_timeseries <- c("NEE", "GPP", "RECO", "Temperature", "Shortwave Radiation", "Net Radiation", "Vapor Pressure Deficit", "Precipitation", "Evapotranspiration", "PPFD")
+
+navset_card_underline(
+  nav_panel("Variable vs Flux By Site", 
+            card(card_body(
+                "
+                These plots allow you to investigate the relationship between a variable of your choice and NEE, GPP, or RECO
+                at your desired timescale (default weekly) in scatterplot form. You can choose which site you want to display 
+                in each of the two panels to do a side by side comparison. The nearest-neighbor smoothing averages of the 
+                relationship between all sites is also shown.
+                "
+            )),
+            layout_sidebar(
+              sidebar = sidebarPanel(
+                accordion(
+                  open = c("Variables"),
+                  accordion_panel(
+                    "Variables",
+                    radioButtons("chosenVariable", "Environmental Variable", available_variables, selected = "Temperature"),
+                    radioButtons("chosenYVariable", "Flux Variable", available_Yvariables, selected = "NEE")
+                  ),
+                  accordion_panel(
+                    "Site 1",
+                    radioButtons("chosenSite1", "Site 1:", available_sites, selected = "1850 Burn")
+                  ), 
+                  accordion_panel(
+                    "Site 2",
+                    radioButtons("chosenSite2", "Site 2:", available_sites, selected = "1998 Burn")
+                  ),
+                  accordion_panel(
+                    "Timescales",
+                    radioButtons("chosenTimescale", "Temporal Resolution:", available_timescales, selected = "Weekly")
+                  ))),
+              accordion(
+                accordion_panel(
+                  "Comparative Site Scatterplots",
+                  layout_columns(
+                      plotOutput("Site1VarNEEScatterplot"),
+                      plotOutput("Site2VarNEEScatterplot")
+                )),
+                accordion_panel(
+                  "All Site Splines",
+                  plotOutput("VarNEESplineplot")
+                )
+              ))),
+  nav_panel("Variable Stats By Years Since Burn",
+             card(card_body(
+                "
+                This plot allows you to investigate the relationship between some common stats about an investigated variable and the
+                number of years since burn. These stats include the min, max, mean, and standard deviation of a single variable
+                (daily scale) and the day of the year at which a given variable was highest or lowest. This also allows you to
+                look at stats about the relationship between a given variable and a flux variable; including the R^2 of the
+                correlation between the investigated and relational (flux) variable, the slope of the regression line between the predictor and
+                the flux variable (either single or multiple), and the RSS of the nearest neighbor regression line displayed in
+                the Variable vs Flux by Site (a measure of how predictable flux is from that variable); all at the daily scale.
+                "
+            )),
+            layout_sidebar(
+              sidebar = sidebarPanel(
+                accordion(
+                  open = c("Stat Choice", "Variables"),
+                  accordion_panel(
+                    "Stat Choice",
+                    radioButtons("chosenStat", "Statistic to Plot", available_statistics,
+                                 selected = "Min")),
+                  accordion_panel(
+                    "Variables",
+                    radioButtons("chosenVariable2", "Investigated Variable", append(available_variables, available_Yvariables),
+                                 selected = "Temperature"),
+                    radioButtons("chosenYVariable2", "Relational Variable", available_Yvariables, selected = "NEE")
+                  ))),
+              plotOutput("StatPlot")
+            )), ## THIS IS WHERE IM STARTING
+    nav_panel("Variable Timeseries", 
+            card(card_body(
+                "
+                These plots allow you to investigate the temporal pattern of a variable of your choice over a four-year time period
+                at your desired timescale (default weekly) in scatterplot form. You can choose which site you want to display 
+                in each of the two panels to do a side by side comparison. The nearest-neighbor smoothing averages of the 
+                relationship between all sites is also shown.
+                "
+            )),
+            layout_sidebar(
+              sidebar = sidebarPanel(
+                accordion(
+                  open = c("Variables"),
+                  accordion_panel(
+                    "Variables",
+                    radioButtons("chosenTimeseries_2", "Environmental Variable", available_timeseries, selected = "NEE")
+                  ),
+                  accordion_panel(
+                    "Site 1",
+                    radioButtons("chosenSite1_2", "Site 1:", available_sites, selected = "1850 Burn")
+                  ), 
+                  accordion_panel(
+                    "Site 2",
+                    radioButtons("chosenSite2_2", "Site 2:", available_sites, selected = "1998 Burn")
+                  ),
+                  accordion_panel(
+                    "Timescales",
+                    radioButtons("chosenTimescale_2", "Temporal Resolution:", available_timescales, selected = "Weekly")
+                  ))),
+              accordion(
+                accordion_panel(
+                  "Comparative Site Timeseries",
+                  layout_columns(
+                      plotOutput("Site1Timeseries"),
+                      plotOutput("Site2Timeseries")
+                )),
+                accordion_panel(
+                  "All Site Splines",
+                  plotOutput("TimeseriesSmooth")
+                )
+              ))),
+  nav_panel("NDVI vs Flux By Site", 
+            card(card_body(
+                "
+                These plots allow you to investigate the relationship between NDVI and NEE, GPP, or RECO
+                in scatterplot form. You can choose which site you want to display 
+                in each of the two panels to do a side by side comparison. The nearest-neighbor smoothing averages of the 
+                relationship between all sites is also shown.
+                "
+            )),
+            layout_sidebar(
+              sidebar = sidebarPanel(
+                accordion(
+                  open = c("Variables"),
+                  accordion_panel(
+                    "Variables",
+                    radioButtons("chosenYVariable_3", "Flux Variable", available_Yvariables, selected = "NEE")
+                  ),
+                  accordion_panel(
+                    "Site 1",
+                    radioButtons("chosenSite1_3", "Site 1:", available_sites, selected = "1850 Burn")
+                  ), 
+                  accordion_panel(
+                    "Site 2",
+                    radioButtons("chosenSite2_3", "Site 2:", available_sites, selected = "1998 Burn")
+                  ),
+                )),
+              accordion(
+                accordion_panel(
+                  "Comparative Site Scatterplots",
+                  layout_columns(
+                      plotOutput("Site1NDVIScatterplot"),
+                      plotOutput("Site2NDVIScatterplot")
+                )),
+                accordion_panel(
+                  "All Site Splines",
+                  plotOutput("NDVISplineplot")
+                )
+              )))
+)
+```
+
+
+
+Note: I'm using the nighttime partitioning method for GPP
+```{r}
+#| context: server
+
+variables_names_to_ids <- c("Temperature" = "TA_F", "Shortwave Radiation" = "SW_IN_F", "Longwave Radiation" = "LW_IN_F",
+                            "Net Radiation" = "NETRAD", "Vapor Pressure Deficit" = "VPD_F", "Pressure" = "PA_F", 
+                            "Precipitation" = "P_F", "Wind Speed" = "WS_F", "Evapotranspiration" = "ET", "PPFD" = "PPFD_IN",
+                            "NEE" = "NEE_VUT_REF", "GPP" = "GPP_NT_VUT_REF", "RECO" = "RECO_NT_VUT_REF")
+
+
+
+sites_names_to_ids <- c("1850 Burn" = "CA-NS1", "1930 Burn" = "CA-NS2", "1964 Burn (dry)" = "CA-NS3", 
+                        "1964 Burn (wet)" = "CA-NS4", "1981 Burn" = "CA-NS5", "1989 Burn" = "CA-NS6", "1998 Burn" = "CA-NS7")
+
+
+sites_ids_to_names <- c("CA-NS1" = "1850 Burn", "CA-NS2" = "1930 Burn", "CA-NS3" = "1964 Burn (dry)", 
+                        "CA-NS4" = "1964 Burn (wet)", "CA-NS5" = "1981 Burn", "CA-NS6" = "1989 Burn", "CA-NS7" = "1998 Burn")
+
+
+filtering_threshold <- 0.8
+
+site_colors <- c("CA-NS1" = "#f92104", "CA-NS2" = "#f9a600", "CA-NS3" = "#2df900", "CA-NS4" = "#00f9f9", 
+                 "CA-NS5" = "#0031f9", "CA-NS6" = "#9202f9", "CA-NS7" = "#f902d8")
+
+data <- reactive({
+  if (input$chosenTimescale == "Weekly"){
+    data <- WW_data
+  } else if (input$chosenTimescale == "Daily"){
+    data <- DD_data
+  } else {
+    data <- MM_data
+  }
+  return(data)
+})
+
+Xscale <- reactive({
+  data <- data()
+  variable_id <- variables_names_to_ids[input$chosenVariable]
+  min_val <- min(data$variable_id)
+  max_val <- max(data$variable_id)
+  range_val <- range(data$variable_id)[1] - range(data$variable_id)[2] 
+  c(min_val - 0.1*range_val, max_val + .1*range_val)
+})
+
+Yscale <- reactive({
+  data <- data()
+  yval <- variables_names_to_ids[input$chosenYVariable]
+  min_val <- min(data$yval)
+  max_val <- max(data$yval)
+  range_val <- range(data$yval)[1] - range(data$yval)[2] 
+  c(min_val - 0.1*range_val, max_val + .1*range_val)
+})
+
+output$Site1VarNEEScatterplot <- renderPlot({
+  
+  variable_id <- variables_names_to_ids[input$chosenVariable]
+  Yvariable_id <- variables_names_to_ids[input$chosenYVariable]
+  site_id = sites_names_to_ids[input$chosenSite1]
+  
+  
+  siteData <- data() 
+  siteData <- siteData |> filter(Site == site_id) |> 
+                       filter_variables(0.8, c(Yvariable_id, variable_id))
+  
+  xlims <- Xscale()
+  ylims <- Yscale()
+  
+  siteData |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id))) +
+            xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2]) +
+            geom_point(alpha = 0.7, color = site_colors[site_id]) + 
+            geom_smooth(se = T, color = "black") + scale_alpha(guide = "none") +
+            labs(x = input$chosenVariable, y = input$chosenYVariable, 
+                 title = paste("Relationship between", input$chosenVariable, "\n and", input$chosenYVariable ,
+                               "at the", input$chosenSite1, "Site"))
+})
+
+output$Site2VarNEEScatterplot <- renderPlot({
+
+  variable_id <- variables_names_to_ids[input$chosenVariable]
+  Yvariable_id <- variables_names_to_ids[input$chosenYVariable]
+  site_id = sites_names_to_ids[input$chosenSite2]
+  
+  siteData <- data() |> filter(Site == site_id) |> 
+                       filter_variables(0.8, c(Yvariable_id, variable_id))
+  
+  xlims <- Xscale()
+  ylims <- Yscale()
+  
+  siteData |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id))) +
+            xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2]) +
+            geom_point(alpha = 0.7, color = site_colors[site_id]) + 
+            geom_smooth(se = T, color = "black") + scale_alpha(guide = "none") +
+            labs(x = input$chosenVariable, y = input$chosenYVariable,
+                 title = paste("Relationship between", input$chosenVariable, "\n and", input$chosenVariable,
+                               "at the", input$chosenSite2, "Site")) 
+})
+
+output$VarNEESplineplot <- renderPlot({
+
+  variable_id <- variables_names_to_ids[input$chosenVariable]
+  Yvariable_id <- variables_names_to_ids[input$chosenYVariable]
+  
+  variableData <- data() |> filter_variables(0.8, c(Yvariable_id, variable_id))
+  
+  xlims <- Xscale()
+  ylims <- Yscale()
+  
+  variableData |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id), color = Site)) +
+            xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2]) +
+            geom_smooth(se = T, alpha = 0.2) + scale_alpha(guide = "none") +
+            scale_color_manual(labels = sites_ids_to_names, values = site_colors) +
+            labs(x = input$chosenVariable, y = input$chosenYVariable,
+                 title = paste("Relationship between", input$chosenVariable, "and ",input$chosenYVariable," at all sites")) 
+})
+
+```
+
+
+```{r}
+#| context: server
+
+output$Site1Timeseries <- renderPlot({
+  
+  variable_id <- 'TIMESTAMP'
+  Yvariable_id <- variables_names_to_ids[input$chosenTimeseries_2]
+  site_id = sites_names_to_ids[input$chosenSite1_2]
+  
+  
+  siteData <- data() 
+  siteData <- siteData |> filter(Site == site_id) |> 
+                       filter_variables(0.8, Yvariable_id)
+  
+  xlims <- Xscale()
+  ylims <- Yscale()
+  
+  siteData |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id))) +
+            xlim(as.Date(xlims[1]),as.Date(xlims[2])) + 
+            ylim(ylims[1],ylims[2]) +
+            geom_point(alpha = 0.7, color = site_colors[site_id]) + 
+            geom_smooth(se = T, color = "black") + scale_alpha(guide = "none") +
+            labs(x = 'Date', y = input$chosenYVariable, 
+                 title = paste("Timeseries of", input$chosenTimeseries_2,
+                               "at the", input$chosenSite1_2, "Site"))
+})
+
+output$Site2Timeseries <- renderPlot({
+  
+  variable_id <- 'TIMESTAMP'
+  Yvariable_id <- variables_names_to_ids[input$chosenTimeseries_2]
+  site_id = sites_names_to_ids[input$chosenSite2_2]
+  
+  
+  siteData <- data() 
+  siteData <- siteData |> filter(Site == site_id) |> 
+                       filter_variables(0.8, Yvariable_id)
+  
+  xlims <- Xscale()
+  ylims <- Yscale()
+  
+  siteData |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id))) +
+            xlim(as.Date(xlims[1]),as.Date(xlims[2])) + 
+            ylim(ylims[1],ylims[2]) +
+            geom_point(alpha = 0.7, color = site_colors[site_id]) + 
+            geom_smooth(se = T, color = "black") + scale_alpha(guide = "none") +
+            labs(x = 'Date', y = input$chosenYVariable, 
+                 title = paste("Timeseries of", input$chosenTimeseries_2,
+                               "at the", input$chosenSite2_2, "Site"))
+})
+
+output$TimeseriesSmooth <- renderPlot({
+
+  variable_id <- 'TIMESTAMP'
+  Yvariable_id <- variables_names_to_ids[input$chosenTimeseries_2]
+  
+  variableData <- data() |> filter_variables(0.8, Yvariable_id)
+  
+  xlims <- Xscale()
+  ylims <- Yscale()
+  
+  variableData |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id), color = Site)) +
+            xlim(as.Date(xlims[1]),as.Date(xlims[2])) + 
+            ylim(ylims[1],ylims[2]) +
+            geom_smooth(se = T, alpha = 0.2) + scale_alpha(guide = "none") +
+            scale_color_manual(labels = sites_ids_to_names, values = site_colors) +
+            labs(x = 'Date', y = input$chosenTimeseries_2,
+                 title = paste("Timeseries of",input$chosenTimeseries_2,"at all sites")) 
+})
+
+output$Site1NDVIScatterplot <- renderPlot({
+  
+  variable_id <- "NDVI"
+  Yvariable_id <- variables_names_to_ids[input$chosenYVariable_3]
+  site_id = sites_names_to_ids[input$chosenSite1_3]
+  
+  
+  DD_16 <- DD_16 |> filter(ID == site_id) |> 
+                       filter_variables(0.8, Yvariable_id)
+  
+  xlims <- Xscale()
+  ylims <- Yscale()
+  
+  DD_16 |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id))) +
+            xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2]) +
+            geom_point(alpha = 0.7, color = site_colors[site_id]) + 
+            geom_smooth(se = T, color = "black") + scale_alpha(guide = "none") +
+            labs(x = 'NDVI', y = input$chosenYVariable, 
+                 title = paste("Relationship between NDVI and", input$chosenYVariable_3 ,
+                               "at the", input$chosenSite1_3, "Site"))
+})
+
+output$Site2NDVIScatterplot <- renderPlot({
+
+  variable_id <- "NDVI"
+  Yvariable_id <- variables_names_to_ids[input$chosenYVariable_3]
+  site_id = sites_names_to_ids[input$chosenSite2_3]
+  
+  DD_16 <- DD_16 |> filter(ID == site_id) |> 
+                       filter_variables(0.8, Yvariable_id)
+  
+  xlims <- Xscale()
+  ylims <- Yscale()
+  
+  DD_16 |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id))) +
+            xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2]) +
+            geom_point(alpha = 0.7, color = site_colors[site_id]) + 
+            geom_smooth(se = T, color = "black") + scale_alpha(guide = "none") +
+            labs(x = 'NDVI', y = input$chosenYVariable_3,
+                 title = paste("Relationship between NDVI and", input$chosenYVariable_3,
+                               "at the", input$chosenSite2_3, "Site")) 
+})
+
+output$NDVISplineplot <- renderPlot({
+
+  variable_id <- "NDVI"
+  Yvariable_id <- variables_names_to_ids[input$chosenYVariable_3]
+  
+  DD_16 <- DD_16 |> filter_variables(0.8, Yvariable_id)
+  
+  xlims <- Xscale()
+  ylims <- Yscale()
+  
+  DD_16 |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id), color = ID)) +
+            xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2]) +
+            geom_smooth(se = T, alpha = 0.2) + scale_alpha(guide = "none") +
+            scale_color_manual(labels = sites_ids_to_names, values = site_colors) +
+            labs(x = 'NDVI', y = input$chosenYVariable_3,
+                 title = paste("Relationship between NDVI and",input$chosenYVariable_3,"at all sites")) 
+})
+
+```
+
+```{r}
+#  DD_data |> ggplot(aes(x = !!sym('TIMESTAMP'), y = !!sym('TA_F'))) +
+#            #xlim(xlims[1],xlims[2]) + 
+#            #ylim(ylims[1],ylims[2]) +
+#            geom_point(alpha = 0.7, color = 'blue') + 
+#            geom_smooth(se = T, color = "black") + scale_alpha(guide = "none") #+
+#            labs(x = 'Date', y = input$chosenYVariable, 
+#                 title = paste("Timeseries of", input$chosenYVariable ,
+#                               "at the", input$chosenSite1, "Site"))
+#})
+```
+
+```{r}
+#| context: server
+#| include: FALSE
+
+get_stats <- reactive({
+  Xvar <- input$chosenVariable2
+  Yvar <- input$chosenYVariable2
+  Xdata <- DD_data |> filter_variables(0.8, c(Xvar))
+  days_of_year <- Xdata |> pull(var = TIMESTAMP) |> yday()
+  Xdata <- Xdata |> mutate("DOY" = days_of_year)
+  
+  min_val <- Xdata |> pull(var = Xvar) |> min()
+  max_val <- Xdata |> pull(var = Xvar) |> max()
+  mean_val <- Xdata |> pull(var = Xvar) |> mean()
+  std_val <- Xdata |> pull(var = Xvar) |> sd()
+  
+  min_ind <- Xdata |> pull(var = Xvar) |> which.min()
+  min_doy <- Xdata[min_ind, "DOY"]
+  max_ind <- Xdata |> pull(var = Xvar) |> which.max()
+  max_doy <- Xdata[max_ind, "DOY"]
+  
+  BothData <-  DD_data |> filter_variables(0.8, c(Xvar, Yvar))
+  
+  
+  
+  if (Xvar %in% available_variables){
+   AllData <- DD_data|> filter_variables(0.8, c(variables_names_to_ids[available_variables], Yvar))
+   AllData <- AllData[,c(variables_names_to_ids[available_variables], Yvar)] 
+  } else {
+   AllData <- DD_data |> filter_variables(0.8, c(variables_names_to_ids[available_variables], Xvar, Yvar))
+   AllData <- AllData[,c(variables_names_to_ids[available_variables], Xvar, Yvar)] 
+  }
+  
+  single_regression <- lm(as.formula(paste(Yvar, "~", Xvar)), data = BothData)
+  
+  correlation <- summary(single_regression)$r.squared
+  single_slope <- summary(single_regression)$coefficients[Xvar, "Estimate"]
+  
+  
+  multiple_regression <- lm(as.formula(paste(Yvar, "~ .")), data = AllData)
+  multiple_slope <- summary(single_regression)$coefficients[Xvar, "Estimate"]
+  
+  loess_regression <- loess(as.formula(paste(Yvar, "~", Xvar)), data = BothData)
+  loess_RSS <- sum(summary(loess_regression)$residuals ** 2)
+  
+  
+  c("Min" = min_val, "Max" = max_val, "Mean" = mean_val, "STD" = std_val, "Min Day of Year" = min_doy, 
+    "Max Day of Year" = max_doy, "Relational Correlation" = correlation, "Relational Single Regression Slope" = single_slope,
+    "Relational Multiple Regression Slope" = multiple_slope, "Relational Nearest Neighbor RSS" = loess_RSS)
+  
+})
+```
+
