@@ -21,6 +21,8 @@ library(bslib)
 # Read in all data
 library(tidyverse)
 library(lubridate)
+library(stringr)
+library(ggtext)
 
 resolution <- "WW"
 
@@ -393,20 +395,22 @@ data <- reactive({
 Xscale <- reactive({
   data <- data()
   variable_id <- variables_names_to_ids[input$chosenVariable]
-  min_val <- min(data$variable_id)
-  max_val <- max(data$variable_id)
-  range_val <- range(data$variable_id)[1] - range(data$variable_id)[2] 
+  min_val <- min(data[,variable_id], na.rm = T)
+  max_val <- max(data[,variable_id], na.rm = T)
+  range_val <- range(data[,variable_id], na.rm = T)[1] - range(data[,variable_id], na.rm = T)[2] 
   c(min_val - 0.1*range_val, max_val + .1*range_val)
 })
 
 Yscale <- reactive({
   data <- data()
   yval <- variables_names_to_ids[input$chosenYVariable]
-  min_val <- min(data$yval)
-  max_val <- max(data$yval)
-  range_val <- range(data$yval)[1] - range(data$yval)[2] 
+  min_val <- min(data[,yval], na.rm = T)
+  max_val <- max(data[,yval], na.rm = T)
+  range_val <- range(data[,yval], na.rm = T)[1] - range(data[,yval], na.rm = T)[2] 
   c(min_val - 0.1*range_val, max_val + .1*range_val)
 })
+
+title_width <- 30
 
 output$Site1VarNEEScatterplot <- renderPlot({
   
@@ -428,8 +432,8 @@ output$Site1VarNEEScatterplot <- renderPlot({
             geom_smooth(se = F, color = "black", method = "loess", span = span_dist) + scale_alpha(guide = "none") +
             labs(x = paste(input$chosenVariable, variables_ids_to_units[variable_id]), 
                  y = paste(input$chosenYVariable, variables_ids_to_units[Yvariable_id]),
-                 title = paste("Relationship between", input$chosenVariable, "\n and", input$chosenYVariable,
-                               "at the \n", input$chosenSite1, "Site")) + theme_classic()
+                 title = stringr::str_wrap(paste("Relationship between", input$chosenVariable, "and", input$chosenYVariable,
+                               "at the", input$chosenSite1, "Site"), width = title_width)) + theme_classic()
 })
 
 output$Site2VarNEEScatterplot <- renderPlot({
@@ -450,8 +454,8 @@ output$Site2VarNEEScatterplot <- renderPlot({
             geom_smooth(se = F, color = "black", method = "loess", span = span_dist) + scale_alpha(guide = "none") +
             labs(x = paste(input$chosenVariable, variables_ids_to_units[variable_id]), 
                  y = paste(input$chosenYVariable, variables_ids_to_units[Yvariable_id]),
-                 title = paste("Relationship between", input$chosenVariable, "\n and", input$chosenYVariable,
-                               "at the \n", input$chosenSite2, "Site")) + theme_classic()
+                 title = stringr::str_wrap(paste("Relationship between", input$chosenVariable, "and", input$chosenYVariable,
+                               "at the", input$chosenSite2, "Site"), width = title_width)) + theme_classic()
 })
 
 output$VarNEESplineplot <- renderPlot({
@@ -470,7 +474,7 @@ output$VarNEESplineplot <- renderPlot({
             scale_color_manual(labels = sites_ids_to_names, values = site_colors) +
             labs(x = paste(input$chosenVariable, variables_ids_to_units[variable_id]), 
                  y = paste(input$chosenYVariable, variables_ids_to_units[Yvariable_id]),
-                 title = paste("Relationship between", input$chosenVariable, "and ",input$chosenYVariable," at all sites")) +
+                 title = stringr::str_wrap(paste("Relationship between", input$chosenVariable, "and ",input$chosenYVariable," at all sites"), width = title_width)) +
     theme_classic()
 })
 
@@ -491,6 +495,24 @@ data2 <- reactive({
   return(data)
 })
 
+
+Xscale2 <- reactive({
+  data <- data2()
+  min_val <- min(data$TIMESTAMP)
+  max_val <- max(data$TIMESTAMP)
+  range_val <- range(data$TIMESTAMP)[1] - range(data$TIMESTAMP)[2] 
+  c(min_val - 0.1*range_val, max_val + .1*range_val)
+})
+
+Yscale2 <- reactive({
+  data <- data2()
+  yval <- variables_names_to_ids[input$chosenTimeseries_2]
+  min_val <- min(data[,yval], na.rm = T)
+  max_val <- max(data[,yval], na.rm = T)
+  range_val <- range(data[,yval], na.rm = T)[1] - range(data[,yval], na.rm = T)[2] 
+  c(min_val - 0.1*range_val, max_val + .1*range_val)
+})
+
 output$Site1Timeseries <- renderPlot({
   
   variable_id <- 'TIMESTAMP'
@@ -502,8 +524,8 @@ output$Site1Timeseries <- renderPlot({
   siteData <- siteData |> filter(Site == site_id) |> 
                        filter_variables(0.8, Yvariable_id)
   
-  xlims <- Xscale()
-  ylims <- Yscale()
+  xlims <- Xscale2()
+  ylims <- Yscale2()
   
   siteData |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id))) +
             xlim(as.Date(xlims[1]),as.Date(xlims[2])) + 
@@ -511,8 +533,8 @@ output$Site1Timeseries <- renderPlot({
             geom_point(alpha = 0.7, color = site_colors[site_id]) + 
             geom_smooth(se = F, color = "black", method = "loess", span = span_dist) + scale_alpha(guide = "none") +
             labs(x = 'Date', y = paste(input$chosenTimeseries_2, variables_ids_to_units[Yvariable_id]),
-                 title = paste("Timeseries of", input$chosenTimeseries_2,
-                               "at the", input$chosenSite1_2, "Site")) + theme_classic()
+                 title = stringr::str_wrap(paste("Timeseries of", input$chosenTimeseries_2,
+                               "at the", input$chosenSite1_2, "Site"), width = title_width)) + theme_classic()
 })
 
 output$Site2Timeseries <- renderPlot({
@@ -526,8 +548,8 @@ output$Site2Timeseries <- renderPlot({
   siteData <- siteData |> filter(Site == site_id) |> 
                        filter_variables(0.8, Yvariable_id)
   
-  xlims <- Xscale()
-  ylims <- Yscale()
+  xlims <- Xscale2()
+  ylims <- Yscale2()
   
   siteData |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id))) +
             xlim(as.Date(xlims[1]),as.Date(xlims[2])) + 
@@ -535,8 +557,8 @@ output$Site2Timeseries <- renderPlot({
             geom_point(alpha = 0.7, color = site_colors[site_id]) + 
             geom_smooth(se = F, color = "black", method = "loess", span = span_dist) + scale_alpha(guide = "none") +
             labs(x = 'Date', y = paste(input$chosenTimeseries_2, variables_ids_to_units[Yvariable_id]),
-                 title = paste("Timeseries of", input$chosenTimeseries_2,
-                               "at the", input$chosenSite2_2, "Site")) + theme_classic()
+                 title = stringr::str_wrap(paste("Timeseries of", input$chosenTimeseries_2,
+                               "at the", input$chosenSite2_2, "Site"), width = title_width)) + theme_classic()
 })
 
 output$TimeseriesSmooth <- renderPlot({
@@ -546,8 +568,8 @@ output$TimeseriesSmooth <- renderPlot({
   
   variableData <- data2() |> filter_variables(0.8, Yvariable_id)
   
-  xlims <- Xscale()
-  ylims <- Yscale()
+  xlims <- Xscale2()
+  ylims <- Yscale2()
   
   variableData |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id), color = Site)) +
             xlim(as.Date(xlims[1]),as.Date(xlims[2])) + 
@@ -555,7 +577,24 @@ output$TimeseriesSmooth <- renderPlot({
             geom_smooth(se = T, alpha = 0.2, method = "loess", span = span_dist) + scale_alpha(guide = "none") +
             scale_color_manual(labels = sites_ids_to_names, values = site_colors) +
             labs(x = 'Date', y = paste(input$chosenTimeseries_2, variables_ids_to_units[Yvariable_id]),
-                 title = paste("Timeseries of",input$chosenTimeseries_2,"at all sites")) + theme_classic()
+                 title = stringr::str_wrap(paste("Timeseries of",input$chosenTimeseries_2,"at all sites"), width = title_width)) + theme_classic()
+})
+
+Xscale3 <- reactive({
+
+  min_val <- min(DD_16$NDVI, na.rm = T)
+  max_val <- max(DD_16$NDVI, na.rm = T)
+  range_val <- range(DD_16$NDVI, na.rm = T)[1] - range(DD_16$NDVI, na.rm = T)[2] 
+  c(min_val - 0.1*range_val, max_val + .1*range_val)
+})
+
+Yscale3 <- reactive({
+
+  yval <- variables_names_to_ids[input$chosenYVariable_3]
+  min_val <- min(DD_16[,yval], na.rm = T)
+  max_val <- max(DD_16[,yval], na.rm = T)
+  range_val <- range(DD_16[,yval], na.rm = T)[1] - range(DD_16[,yval], na.rm = T)[2] 
+  c(min_val - 0.1*range_val, max_val + .1*range_val)
 })
 
 output$Site1NDVIScatterplot <- renderPlot({
@@ -564,20 +603,21 @@ output$Site1NDVIScatterplot <- renderPlot({
   Yvariable_id <- variables_names_to_ids[input$chosenYVariable_3]
   site_id = sites_names_to_ids[input$chosenSite1_3]
   
+  xlims <- Xscale3()
+  ylims <- Yscale3()
   
-  DD_16 <- DD_16 |> filter(ID == site_id) |> 
+  SiteData <- DD_16 |> filter(ID == site_id) |> 
                        filter_variables(0.8, Yvariable_id)
   
-  xlims <- Xscale()
-  ylims <- Yscale()
+
   
-  DD_16 |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id))) +
+  SiteData |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id))) +
             xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2]) +
             geom_point(alpha = 0.7, color = site_colors[site_id]) + 
             geom_smooth(se = F, color = "black", method = "loess", span = span_dist) + scale_alpha(guide = "none") +
             labs(x = 'NDVI', y = paste(input$chosenYVariable_3, variables_ids_to_units[Yvariable_id]), 
-                 title = paste("Relationship between NDVI and\n", input$chosenYVariable_3 ,
-                               "at the", input$chosenSite1_3, "Site")) + theme_classic()
+                 title = stringr::str_wrap(paste("Relationship between NDVI and", input$chosenYVariable_3 ,
+                               "at the", input$chosenSite1_3, "Site"), width = title_width)) + theme_classic()
 })
 
 output$Site2NDVIScatterplot <- renderPlot({
@@ -586,19 +626,20 @@ output$Site2NDVIScatterplot <- renderPlot({
   Yvariable_id <- variables_names_to_ids[input$chosenYVariable_3]
   site_id = sites_names_to_ids[input$chosenSite2_3]
   
-  DD_16 <- DD_16 |> filter(ID == site_id) |> 
+  xlims <- Xscale3()
+  ylims <- Yscale3()
+  
+  SiteData <- DD_16 |> filter(ID == site_id) |> 
                        filter_variables(0.8, Yvariable_id)
   
-  xlims <- Xscale()
-  ylims <- Yscale()
   
-  DD_16 |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id))) +
+  SiteData |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id))) +
             xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2]) +
             geom_point(alpha = 0.7, color = site_colors[site_id]) + 
             geom_smooth(se = F, color = "black", method = "loess", span = span_dist) + scale_alpha(guide = "none") +
             labs(x = 'NDVI', y = paste(input$chosenYVariable_3, variables_ids_to_units[Yvariable_id]),
-                 title = paste("Relationship between NDVI and\n", input$chosenYVariable_3,
-                               "at the", input$chosenSite2_3, "Site")) + theme_classic()
+                 title = stringr::str_wrap(paste("Relationship between NDVI and", input$chosenYVariable_3,
+                               "at the", input$chosenSite2_3, "Site"), width = title_width)) + theme_classic()
 })
 
 output$NDVISplineplot <- renderPlot({
@@ -606,17 +647,18 @@ output$NDVISplineplot <- renderPlot({
   variable_id <- "NDVI"
   Yvariable_id <- variables_names_to_ids[input$chosenYVariable_3]
   
-  DD_16 <- DD_16 |> filter_variables(0.8, Yvariable_id)
+  xlims <- Xscale3()
+  ylims <- Yscale3()
   
-  xlims <- Xscale()
-  ylims <- Yscale()
+  DD_16 <- DD_16 |> filter_variables(0.8, Yvariable_id)
+
   
   DD_16 |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id), color = ID)) +
             xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2]) +
             geom_smooth(se = T, alpha = 0.2, method = "loess", span = span_dist) + scale_alpha(guide = "none") +
             scale_color_manual(labels = sites_ids_to_names, values = site_colors) +
             labs(x = 'NDVI', y=paste(input$chosenYVariable_3, variables_ids_to_units[Yvariable_id]),
-                 title = paste("Relationship between NDVI and\n",input$chosenYVariable_3,"at all sites")) + theme_classic()
+                 title = stringr::str_wrap(paste("Relationship between NDVI and",input$chosenYVariable_3,"at all sites"), width = title_width)) + theme_classic()
 })
 
 ```
@@ -717,15 +759,17 @@ get_stats <- reactive({
 stats_to_xlab <- reactive({
   Xvar <- input$chosenVariable2
   Yvar <- input$chosenYVariable2
-  c("Min" = paste("Min of", Xvar, variables_ids_to_units[Xvar]), "Max" = paste("Max of", Xvar, variables_ids_to_units[Xvar]), "Mean" = paste("Mean of", Xvar, variables_ids_to_units[Xvar]),
-    "STD" = paste("STD of", Xvar, variables_ids_to_units[Xvar]), 
+  Xvar_ID <- variables_names_to_ids[Xvar]
+  Yvar_ID <- variables_names_to_ids[Yvar]
+  c("Min" = paste("Min of", Xvar, variables_ids_to_units[Xvar_ID]), "Max" = paste("Max of", Xvar, variables_ids_to_units[Xvar_ID]), "Mean" = paste("Mean of", Xvar, variables_ids_to_units[Xvar_ID]),
+    "STD" = paste("STD of", Xvar, variables_ids_to_units[Xvar_ID]), 
     "Relational Correlation" = paste("$R^2$ Between", Xvar, "and", Yvar),
     "Relational Single Regression Slope" = paste("Single Regression Slope of", Yvar, "from", Xvar, 
-                                                 variables_ids_to_units[Yvar], "/", variables_ids_to_units[Xvar]), 
+                                                 variables_ids_to_units[Yvar_ID], "/", variables_ids_to_units[Xvar_ID]), 
     "Relational Multiple Regression Slope" = paste("Multiple Regression Slope of", Yvar, "from", Xvar,
-                                                   variables_ids_to_units[Yvar], "/", variables_ids_to_units[Xvar]), 
+                                                   variables_ids_to_units[Yvar_ID], "/", variables_ids_to_units[Xvar_ID]), 
     "Relational Nearest Neighbor RSS" = paste("RSS of Nearest Neighbor Regression of", Yvar, "from", Xvar,
-                                              variables_ids_to_units[Yvar]))
+                                              variables_ids_to_units[Yvar_ID]))
 })
 
 output$StatPlot <- renderPlot({
@@ -747,7 +791,7 @@ output$ViolinPlot <- renderPlot({
     scale_x_discrete(labels = sites_ids_to_burntime) +
     labs(x = "Years Since Burn",
                  y = paste(input$chosenVariable2, variables_ids_to_units[variable_id]),
-                 title = paste("Distribution of", input$chosenVariable2, "At All Sites")) + theme_classic()
+                 title = stringr::str_wrap(paste("Distribution of", input$chosenVariable2, "At All Sites"), width = title_width)) + theme_classic()
 })
 ```
 
