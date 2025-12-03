@@ -355,7 +355,7 @@ variables_names_to_ids <- c("Temperature" = "TA_F", "Shortwave Radiation" = "SW_
 variables_ids_to_units <- c("TA_F" = "(ºC)", "SW_IN_F" = "(W/m^2)", "LW_IN_F" = "(W/m^2)",
                             "NETRAD" = "(W/m^2)", "VPD_F" = "(hPa)", "PA_F" = "(kPa)", 
                             "P_F" = "(mm/day)", "WS_F" = "(m/s)", "ET" = "(kg/m^2s", 
-                            "PPFD_IN" = "(expression(mu)molPhotons/m^2s)",
+                            "PPFD_IN" = "(umolPhotons/m^2s)",
                              "NEE_VUT_REF" = "(gC/m^2day)", "GPP_NT_VUT_REF" = "(gC/m^2day)",  
                             "RECO_NT_VUT_REF" = "(gC/m^2day)")
 
@@ -460,11 +460,7 @@ output$VarNEESplineplot <- renderPlot({
   
   variableData <- data() |> filter_variables(0.8, c(Yvariable_id, variable_id))
   
-  xlims <- Xscale()
-  ylims <- Yscale()
-  
   variableData |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id), color = Site)) +
-            xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2]) +
             geom_smooth(se = T, alpha = 0.2, method = "loess", span = span_dist) + scale_alpha(guide = "none") +
             scale_color_manual(labels = sites_ids_to_names, values = site_colors) +
             labs(x = paste(input$chosenVariable, variables_ids_to_units[variable_id]), 
@@ -567,8 +563,6 @@ output$TimeseriesSmooth <- renderPlot({
   ylims <- Yscale2()
   
   variableData |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id), color = Site)) +
-            xlim(as.Date(xlims[1]),as.Date(xlims[2])) + 
-            ylim(ylims[1],ylims[2]) +
             geom_smooth(se = T, alpha = 0.2, method = "loess", span = span_dist) + scale_alpha(guide = "none") +
             scale_color_manual(labels = sites_ids_to_names, values = site_colors) +
             labs(x = 'Date', y = paste(input$chosenTimeseries_2, variables_ids_to_units[Yvariable_id]),
@@ -642,14 +636,12 @@ output$NDVISplineplot <- renderPlot({
   variable_id <- "NDVI"
   Yvariable_id <- variables_names_to_ids[input$chosenYVariable_3]
   
-  xlims <- Xscale3()
-  ylims <- Yscale3()
+
   
   DD_16 <- DD_16 |> filter_variables(0.8, Yvariable_id)
 
   
   DD_16 |> ggplot(aes(x = !!sym(variable_id), y = !!sym(Yvariable_id), color = ID)) +
-            xlim(xlims[1],xlims[2]) + ylim(ylims[1],ylims[2]) +
             geom_smooth(se = T, alpha = 0.2, method = "loess", span = span_dist) + scale_alpha(guide = "none") +
             scale_color_manual(labels = sites_ids_to_names, values = site_colors) +
             labs(x = 'NDVI', y=paste(input$chosenYVariable_3, variables_ids_to_units[Yvariable_id]),
