@@ -1,8 +1,8 @@
 # Data Science Biology Final Project
 
-## https://nikhilshah.shinyapps.io/carbonflux/
+## App: https://annahmc.shinyapps.io/datasciencebiologyfinalproject/ 
 
-## [link to written report]
+## Report: https://docs.google.com/document/d/1vpHVDka_D544-L4ODfSnUrt5zdVx7GqS0fabhTs0xCE/edit?usp=sharing
 
 ## Authors and Contributions
 
