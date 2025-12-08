@@ -4,7 +4,7 @@ format: html
 server: shiny
 ---
 
-*Explanatory Variable Descriptions:*
+**Explanatory Variable Descriptions:**
 
 Temperature: Air temperature, measured at tower
 
@@ -23,7 +23,7 @@ PPFD: Photosynthetic Photon Flux Density, a measure of how many photons within t
 NDVI: (Only available at 16 day resolution) Measure of how green the plants are, measured by satellite
 
 
-*Carbon Flux Variable Descriptions*
+**Carbon Flux Variable Descriptions**
 
 NEE: Net ecosystem exchange, the carbon flux directly measured by the tower. NEE = RECO - GPP, and is negative when the ecosystem is a carbon sink and positive when the ecosystem is a carbon source
 
@@ -33,7 +33,7 @@ RECO: Amount of respiration (carbon source) in the ecosystem; derived from NEE b
 
 
 
-*Usage Notes*
+**Usage Notes**
 
 Due to an annoying bug, you must click on the first tab (Variable vs Flux by Site) before being able to switch to any other tab. 
 
