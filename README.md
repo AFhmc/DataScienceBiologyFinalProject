@@ -7,12 +7,19 @@
 ## [link to written report]
 
 ## Authors and Contributions
-- Anna:
+
 - Nikhil:
   - Some of the initial data importing and cleaning
+  - Processing the NDVI data
   - Interactive shiny plots (timeseries and NDVI)
   - Integrating all shiny plots together + debugging
   - Deploying the shiny app
+- Anna:
+  - Downloading the data
+  - Also working on inital data importing and cleaning
+  - Shiny plots for variables against each other and statistics about variables
+  - Helping debugging combined app
+  - Helping deploying the shiny app
 
 ## Repository Contents
 - `Data/CA_NSx`: Directly-downloaded Fluxnet data (http://fluxnet.org)
