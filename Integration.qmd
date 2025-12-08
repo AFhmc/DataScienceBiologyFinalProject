@@ -4,6 +4,39 @@ format: html
 server: shiny
 ---
 
+*Explanatory Variable Descriptions:*
+
+Temperature: Air temperature, measured at tower
+
+Shortwave Radiation: Incoming solar radiation, measured at tower
+
+Net Radiation: Net incoming minus outgoing radiation, measured at tower
+
+Vapor Pressure Deficit: Deficit of moisture in the air relative to amount holdable when saturated, measured at tower
+
+Precipitation: Average daily precipitation within the timestep, measured at tower
+
+Evapotranspiration: Measure of how much water is lost through evaporation and transpiration, calculated from latent heat fluxes measured at tower
+
+PPFD: Photosynthetic Photon Flux Density, a measure of how many photons within the photosynthetically active wavelengths are reaching the plants, measured at tower
+
+NDVI: (Only available at 16 day resolution) Measure of how green the plants are, measured by satellite
+
+
+*Carbon Flux Variable Descriptions*
+
+NEE: Net ecosystem exchange, the carbon flux directly measured by the tower. NEE = RECO - GPP, and is negative when the ecosystem is a carbon sink and positive when the ecosystem is a carbon source
+
+GPP: Amount of photosynthesis (carbon sink) in the ecosystem; derived from NEE by nighttime partitioning method
+
+RECO: Amount of respiration (carbon source) in the ecosystem; derived from NEE by nighttime partitioning method
+
+
+
+*Usage Notes*
+
+Due to an annoying bug, you must click on the first tab (Variable vs Flux by Site) before being able to switch to any other tab. 
+
 ```{r}
 #| context: setup
 #| include: false
@@ -178,9 +211,9 @@ available_sites <- c("1850 Burn", "1930 Burn", "1964 Burn (dry)", "1964 Burn (we
 
 available_timescales <- c("Daily", "Weekly", "Monthly")
 
-available_statistics <- c("Min", "Max", "Mean", "STD", "Relational Correlation", 
-                          "Relational Single Regression Slope", "Relational Multiple Regression Slope", 
-                          "Relational Nearest Neighbor RSS")
+available_statistics <- c("Min", "Max", "Mean", "STD", "Flux Correlation", "Value With Max Flux", "Value With Min Flux",
+                          "Flux Single Regression Slope", "Flux Multiple Regression Slope", 
+                          "Flux Nearest Neighbor RSS")
 
 available_timeseries <- c("NEE", "GPP", "RECO", "Temperature", "Shortwave Radiation", "Net Radiation", "Vapor Pressure Deficit", "Precipitation", "Evapotranspiration", "PPFD")
 
@@ -200,8 +233,8 @@ navset_card_underline(
                   open = c("Variables"),
                   accordion_panel(
                     "Variables",
-                    radioButtons("chosenVariable", "Environmental Variable", available_variables[-5], selected = "Temperature"),
-                    radioButtons("chosenYVariable", "Flux Variable", available_Yvariables, selected = "NEE")
+                    radioButtons("chosenVariable", "Explanatory Variable", available_variables[-5], selected = "Temperature"),
+                    radioButtons("chosenYVariable", "Carbon Flux Variable", available_Yvariables, selected = "NEE")
                   ),
                   accordion_panel(
                     "Site 1",
@@ -233,10 +266,10 @@ navset_card_underline(
                 This plot allows you to investigate the relationship between some common stats about an investigated variable and the
                 number of years since burn. These stats include the min, max, mean, and standard deviation of a single variable
                 (daily scale). This also allows you to
-                look at stats about the relationship between a given variable and a flux variable; including the R^2 of the
-                correlation between the investigated and relational (flux) variable, the slope of the regression line between the predictor and
-                the flux variable (either single or multiple), and the RSS of the nearest neighbor regression line displayed in
-                the Variable vs Flux by Site (a measure of how predictable flux is from that variable); all at the daily scale. 
+                look at stats about the relationship between an investigated variable and a flux variable; including the value of the investigated variable at which the flux variable is maximum or minimum, the R^2 of the
+                correlation between the investigated and flux variable, the slope of the regression line between the predictor and
+                the flux variable (either single or multiple regression), and the RSS of the nearest neighbor regression line displayed in
+                the Variable vs Flux by Site tab (a measure of how predictable flux is from that variable); all at the daily scale. 
                 Additionally, you can see density plots for daily values of the investigated variable by site.
                 "
             )),
@@ -252,7 +285,7 @@ navset_card_underline(
                     "Variables",
                     radioButtons("chosenVariable2", "Investigated Variable", append(available_variables, available_Yvariables),
                                  selected = "Temperature"),
-                    radioButtons("chosenYVariable2", "Relational Variable", available_Yvariables, selected = "NEE")
+                    radioButtons("chosenYVariable2", "Flux Variable", available_Yvariables, selected = "NEE")
                   ))),
               accordion(
                 accordion_panel("Plot of Statistics",
@@ -276,7 +309,7 @@ navset_card_underline(
                   open = c("Variables"),
                   accordion_panel(
                     "Variables",
-                    radioButtons("chosenTimeseries_2", "Environmental Variable", available_timeseries, selected = "NEE")
+                    radioButtons("chosenTimeseries_2", "Variable", available_timeseries, selected = "NEE")
                   ),
                   accordion_panel(
                     "Site 1",
@@ -317,7 +350,7 @@ navset_card_underline(
                   open = c("Variables"),
                   accordion_panel(
                     "Variables",
-                    radioButtons("chosenYVariable_3", "Flux Variable", available_Yvariables, selected = "NEE")
+                    radioButtons("chosenYVariable_3", "Carbon Flux Variable", available_Yvariables, selected = "NEE")
                   ),
                   accordion_panel(
                     "Site 1",
@@ -671,6 +704,8 @@ get_stats <- reactive({
   max_val = rep(0,7)
   mean_val = rep(0,7)
   std_val = rep(0,7)
+  val_of_max = rep(0,7)
+  val_of_min = rep(0,7)
   correlation = rep(0,7)
   single_slope = rep(0,7)
   multiple_slope = rep(0,7)
@@ -697,6 +732,12 @@ get_stats <- reactive({
     
     
     BothData <-  DD_data |> filter(Site == siteID) |> filter_variables(0.8, c(Xvar, Yvar))
+    
+    max_ind <- BothData |> pull(var = Yvar) |> which.max()
+    min_ind <- BothData |> pull(var = Yvar) |> which.min()
+    vals <- BothData |> pull(var = Xvar)
+    val_of_max[index] <- vals[max_ind]
+    val_of_min[index] <- vals[min_ind]
     
     
     if (Xvar == Yvar){
@@ -731,9 +772,9 @@ get_stats <- reactive({
     index <- index + 1
   }
   df <- tibble("YearsSinceBurn" = years_since_burn, "SiteID" = site_ID, "Min" = min_val, "Max" = max_val, "Mean" = mean_val,
-               "STD" = std_val,
-               "Relational Correlation" = correlation, "Relational Single Regression Slope" = single_slope, 
-               "Relational Multiple Regression Slope" = multiple_slope, "Relational Nearest Neighbor RSS" = loess_RSS)
+               "STD" = std_val, "Value With Max Flux" = val_of_max,  "Value With Min Flux" = val_of_min, 
+               "Flux Correlation" = correlation, "Flux Single Regression Slope" = single_slope, 
+               "Flux Multiple Regression Slope" = multiple_slope, "Flux Nearest Neighbor RSS" = loess_RSS)
   df
 })
 ```
@@ -750,12 +791,14 @@ stats_to_xlab <- reactive({
   Yvar_ID <- variables_names_to_ids[Yvar]
   c("Min" = paste("Min of", Xvar, variables_ids_to_units[Xvar_ID]), "Max" = paste("Max of", Xvar, variables_ids_to_units[Xvar_ID]), "Mean" = paste("Mean of", Xvar, variables_ids_to_units[Xvar_ID]),
     "STD" = paste("STD of", Xvar, variables_ids_to_units[Xvar_ID]), 
-    "Relational Correlation" = paste("$R^2$ Between", Xvar, "and", Yvar),
-    "Relational Single Regression Slope" = paste("Single Regression Slope of", Yvar, "from", Xvar, 
+    "Value With Max Flux" = paste(Xvar, "where", Yvar, "is maximum", variables_ids_to_units[Xvar_ID]),
+    "Value With Min Flux" = paste(Xvar, "where", Yvar, "is minimum", variables_ids_to_units[Xvar_ID]),
+    "Flux Correlation" = paste("$R^2$ Between", Xvar, "and", Yvar),
+    "Flux Single Regression Slope" = paste("Single Regression Slope of", Yvar, "from", Xvar, 
                                                  variables_ids_to_units[Yvar_ID], "/", variables_ids_to_units[Xvar_ID]), 
-    "Relational Multiple Regression Slope" = paste("Multiple Regression Slope of", Yvar, "from", Xvar,
+    "Flux Multiple Regression Slope" = paste("Multiple Regression Slope of", Yvar, "from", Xvar,
                                                    variables_ids_to_units[Yvar_ID], "/", variables_ids_to_units[Xvar_ID]), 
-    "Relational Nearest Neighbor RSS" = paste("RSS of Nearest Neighbor Regression of", Yvar, "from", Xvar,
+    "Flux Nearest Neighbor RSS" = paste("RSS of Nearest Neighbor Regression of", Yvar, "from", Xvar,
                                               variables_ids_to_units[Yvar_ID]))
 })
 
