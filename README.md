@@ -12,12 +12,16 @@
   - Interactive shiny plots (timeseries and NDVI)
   - Integrating all shiny plots together + debugging
   - Deploying the shiny app
+  - Writing: Deployed Product and Data Processing section, Works Cited
+  - Revising/editing done on the entire report
 - Anna:
   - Downloading the data
   - Also working on inital data importing and cleaning
   - Shiny plots for variables against each other and statistics about variables
   - Helping debugging combined app
   - Helping deploying the shiny app
+  - Writing: Background, Problem Statement, and Examples of Data analysis sections
+  - Revising/editing done on the entire report
 
 ## Repository Contents
 - `Data/CA_NSx`: Directly-downloaded Fluxnet data for site CA_NSx (http://fluxnet.org, subset data product)
